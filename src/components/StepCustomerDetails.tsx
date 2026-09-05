@@ -48,7 +48,7 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
             id="fullNameInput"
             type="text"
             className={`input-field ${errors.name ? 'error' : ''}`}
-            placeholder="e.g. Rahul Sharma"
+            placeholder="e.g. Rahul "
             value={name}
             onChange={(e) => onChangeField('name', e.target.value)}
             autoComplete="name"

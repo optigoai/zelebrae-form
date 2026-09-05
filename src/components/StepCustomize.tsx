@@ -39,18 +39,11 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
           <Sparkles size={14} />
           Step 4 of 5
         </span>
+        <h1 className="step-title">Included Amenities</h1>
       </div>
 
-      {/* Section 1: Included Amenities (Only 4, no green complimentary badge) */}
+      {/* Section 1: Included Amenities */}
       <div>
-        <div className="section-block-title">
-          <div>
-            <h3>Included Amenities</h3>
-            <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
-              The following standard celebration amenities are prepared for your arrival.
-            </p>
-          </div>
-        </div>
 
         <div className="amenities-list">
           {amenities.map((amenity) => {

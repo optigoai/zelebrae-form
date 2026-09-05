@@ -906,7 +906,11 @@
 .customization-section {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.5rem;
+}
+
+.customization-section .step-header {
+  margin-bottom: 0.85rem;
 }
 
 .section-block-title {
