@@ -95,17 +95,19 @@ Follow these simple steps to connect the booking application to your live Google
      2. `Zelebrae Bookings - Karaparamba`
      3. `Zelebrae Bookings - Ashokapuram`
      4. `Zelebrae Bookings - Arakkinar`
-   - In your Master spreadsheet, a **`Branch Links`** tab is created listing each branch's exact Google Sheet URL!
+   - In your Master spreadsheet, an **`All Bookings`** tab is created which automatically captures **every single booking across all 4 locations** in real time!
+   - A **`Branch Links`** tab is also created listing each branch's exact Google Sheet URL!
    - Each sheet is styled with brand-purple headers (`#4A1E5F`).
 
-> **🔒 Complete Branch Privacy**:
-> Share each Google Sheet link **ONLY** with the respective branch manager/team. Because each branch has its own independent spreadsheet file, staff at one branch **cannot see** any booking data from the other branches!
+> **🔒 Complete Branch Privacy + Central Owner Dashboard**:
+> - **Branch Staff**: Each branch receives their own link and can only see their own branch's bookings.
+> - **Business Owner / Management**: The Master Spreadsheet's **`All Bookings`** tab gives you a unified, live view of all 4 branches simultaneously!
 
 ### Step 5: Deploy as Web App
 1. At the top right of the Apps Script editor, click **Deploy** → **New deployment** (or **Manage deployments** → edit to deploy a **New Version** if updating).
 2. Click the gear icon next to "Select type" and choose **Web app**.
 3. Fill in the deployment details:
-   - **Description**: `Zelebrae Celebration API (Branch Isolation)`
+   - **Description**: `Zelebrae Celebration API (Branch Isolation + Central Feed)`
    - **Execute as**: **Me** (`your-email@gmail.com`)
    - **Who has access**: **Anyone** *(Important: Allows the frontend to read availability and submit bookings without customer Google login)*
 4. Click **Deploy**.
@@ -143,7 +145,7 @@ flowchart TD
     A[Customer submits reservation] --> B[Google Apps Script receives POST]
     B --> C[LockService.getScriptLock.tryLock 30s]
     C --> D{Fresh check: Is date + time_slot active in branch spreadsheet?}
-    D -- NO --> E[Append row ONLY to that branch's dedicated spreadsheet with status 'confirmed']
+    D -- NO --> E[Append row to branch spreadsheet AND to Master Sheet All Bookings]
     E --> F[Generate Booking ID ZB-YYYYMMDD-XXX]
     F --> G[Release lock & Return Success 200]
     D -- YES --> H[Release lock & Return SLOT_ALREADY_BOOKED]

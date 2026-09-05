@@ -1,6 +1,6 @@
 # Google Sheets Schema & Data Model — Zelebrae Pastries
 
-This document outlines the spreadsheet schema and branch isolation architecture used by the Zelebrae Pastries Celebration Point Booking System.
+This document outlines the spreadsheet schema and synchronization architecture used by the Zelebrae Pastries Celebration Point Booking System.
 
 ---
 
@@ -22,9 +22,15 @@ To ensure that **branches cannot see each other's booking data**, each of the 4 
 
 ---
 
-## 1. Sheet Structure (Identical across all 4 Branch Spreadsheets)
+## 👑 Centralized Master Sheet ("All Bookings" for Owner & Management)
 
-Within each branch spreadsheet, bookings are recorded in the primary **`Bookings`** sheet:
+At the same time, the **Central Master Spreadsheet** automatically receives a simultaneous real-time copy of **every single booking across all 4 locations**:
+- Tab name: **`All Bookings`**
+- Provides the business owner, management, and central kitchen with a complete 360° live overview of every reservation across all branches in one unified table!
+
+---
+
+## 1. Sheet Structure (Identical across all 4 Branch Spreadsheets & "All Bookings")
 
 | Column | Name | Type | Sample Value | Description |
 |---|---|---|---|---|
@@ -54,9 +60,10 @@ Within each branch spreadsheet, bookings are recorded in the primary **`Bookings
 
 ---
 
-## 2. Configuration Sheets (in Master Spreadsheet)
+## 2. Configuration & Master Sheets (in Master Spreadsheet)
 
-The master administration spreadsheet contains the centralized configuration tabs:
+The master administration spreadsheet contains:
+- **`All Bookings`**: Live unified feed of all bookings across all 4 locations.
 - **`Branch Links`**: Auto-generated table containing all 4 branch names, location codes, spreadsheet links, and IDs.
 - **`Locations`**: Physical address, capacity, and active status for each location.
 - **`Slots`**: Active operating hours (`09:30 AM` to `08:30 PM`).

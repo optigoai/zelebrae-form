@@ -5,7 +5,7 @@
  * ============================================================================
  * 
  * Features:
- * 1. Dedicated Separate Spreadsheets (Branch Isolation):
+ * 1. Dedicated Branch Spreadsheets (Branch Isolation):
  *    Each celebration location has its OWN separate Google Spreadsheet file:
  *    - Pantheerankavu
  *    - Karaparamba
@@ -14,16 +14,24 @@
  *    Each branch team is given access ONLY to their own spreadsheet link,
  *    guaranteeing that branches cannot view each other's booking data!
  * 
- * 2. doGet(e): Reads configuration & checks real-time slot availability for
- *    the selected location and date from its dedicated spreadsheet.
+ * 2. Real-Time Centralized Master Sheet ("All Bookings"):
+ *    At the SAME TIME, every booking across ALL branches is automatically
+ *    mirrored to the Main Master Spreadsheet under the "All Bookings" sheet.
+ *    The central admin/management can view all branches in one unified dashboard!
  * 
- * 3. doPost(e): Atomic booking creation protected by LockService to eliminate
- *    race conditions and double-bookings. Appends booking row exclusively to
- *    the corresponding branch's spreadsheet.
+ * 3. doGet(e): Reads configuration & checks real-time slot availability for
+ *    the selected location and date.
  * 
- * 4. setupSeparateBranchSpreadsheets(): One-click function that automatically
+ * 4. doPost(e): Atomic booking creation protected by LockService to eliminate
+ *    race conditions and double-bookings. Appends booking row simultaneously to
+ *    both the branch's dedicated spreadsheet and the central master spreadsheet.
+ * 
+ * 5. setupSeparateBranchSpreadsheets(): One-click function that automatically
  *    creates 4 brand-new separate Google Spreadsheets in your Google Drive,
  *    styles their headers, and saves their links.
+ * 
+ * 6. setupInitialSheets(): Initializes the master sheet ("All Bookings", "Branch Links",
+ *    and configuration sheets) and all 4 branch spreadsheets.
  */
 
 // Timezone configured for Kerala, India
@@ -58,6 +66,13 @@ const LOCATION_SPREADSHEETS = {
   'ashokapuram': '',
   'arakkinar': ''
 };
+
+/**
+ * Master Spreadsheet Configuration (Admin / Central Dashboard)
+ * Holds ALL bookings across all branches in one central place.
+ * Leave blank if this script is attached directly to your Master Spreadsheet.
+ */
+const MASTER_SPREADSHEET_ID_OR_URL = '';
 
 // Standard booking column headers
 const BOOKING_HEADERS = [
@@ -105,6 +120,33 @@ function getLocationSheetName(location) {
 }
 
 /**
+ * Returns the Master Spreadsheet object (where all branch data is centralized)
+ */
+function getMasterSpreadsheet() {
+  let masterId = extractSpreadsheetId(MASTER_SPREADSHEET_ID_OR_URL);
+  if (!masterId) {
+    try {
+      const props = PropertiesService.getScriptProperties();
+      masterId = extractSpreadsheetId(props.getProperty('MASTER_SPREADSHEET_ID'));
+    } catch (e) {}
+  }
+
+  if (masterId) {
+    try {
+      return SpreadsheetApp.openById(masterId);
+    } catch (err) {
+      Logger.log("⚠️ Could not open master spreadsheet by ID: " + err.toString());
+    }
+  }
+
+  try {
+    return SpreadsheetApp.getActiveSpreadsheet();
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
  * Returns the dedicated Spreadsheet object for the given location:
  * 1. Checks LOCATION_SPREADSHEETS hardcoded mapping
  * 2. Checks ScriptProperties (set automatically by setupSeparateBranchSpreadsheets)
@@ -139,7 +181,7 @@ function getLocationSpreadsheet(location) {
     try {
       return SpreadsheetApp.openById(sheetId);
     } catch (err) {
-      Logger.log("⚠️ Could not open spreadsheet with ID " + sheetId + ": " + err.toString());
+      Logger.log("⚠️ Could not open branch spreadsheet with ID " + sheetId + ": " + err.toString());
     }
   }
 
@@ -186,7 +228,7 @@ function getBookingTargetSheet(ss, location) {
 function doGet(e) {
   try {
     const action = (e && e.parameter && e.parameter.action) || 'getAvailability';
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getMasterSpreadsheet() || SpreadsheetApp.getActiveSpreadsheet();
 
     if (action === 'getConfig') {
       return jsonResponse({
@@ -230,7 +272,9 @@ function doGet(e) {
 
 /**
  * Handle HTTP POST Requests: Atomic Booking with LockService Protection
- * Routes the booking directly to the corresponding branch's separate spreadsheet.
+ * Routes the booking:
+ * 1. Exclusively to the branch's separate spreadsheet.
+ * 2. AT THE SAME TIME, to the Central Master Spreadsheet ("All Bookings").
  */
 function doPost(e) {
   // 1. Acquire Script Lock with a 30-second timeout to serialize concurrent requests
@@ -253,7 +297,7 @@ function doPost(e) {
       body = e.parameter;
     }
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const masterSS = getMasterSpreadsheet() || SpreadsheetApp.getActiveSpreadsheet();
 
     // 2. Extract and sanitize payload
     const rawLocation = (body.location || 'pantheerankavu').toLowerCase().trim();
@@ -287,8 +331,8 @@ function doPost(e) {
       });
     }
 
-    // 4. Double booking collision check in the branch's spreadsheet
-    const isBooked = isSlotAlreadyBooked(ss, rawLocation, date, rawTimeSlot);
+    // 4. Double booking collision check in the branch's spreadsheet & master sheet
+    const isBooked = isSlotAlreadyBooked(masterSS, rawLocation, date, rawTimeSlot);
     if (isBooked) {
       return jsonResponse({
         success: false,
@@ -303,21 +347,12 @@ function doPost(e) {
     const bookingId = "ZB-" + cleanDate + "-" + randomSuffix;
     const createdAt = Utilities.formatDate(new Date(), TIMEZONE, "yyyy-MM-dd'T'HH:mm:ssXXX");
 
-    // 6. Open the branch's dedicated spreadsheet
-    const branchSpreadsheet = getLocationSpreadsheet(rawLocation);
-    const targetSheet = getBookingTargetSheet(branchSpreadsheet, rawLocation);
+    // 6. Prepare booking data row
     const targetLocationName = getLocationSheetName(rawLocation);
-
-    if (!targetSheet) {
-      throw new Error("Could not access booking sheet for " + targetLocationName);
-    }
-
-    // Prefix single quote ' so Google Sheets strictly preserves text literal and never interprets '+' as formula error
     const cellWhatsapp = "'" + rawWhatsapp;
     const cellTimeSlot = "'" + rawTimeSlot;
 
-    // Append booking row ONLY to the corresponding branch's spreadsheet
-    targetSheet.appendRow([
+    const bookingRow = [
       bookingId,
       createdAt,
       targetLocationName,
@@ -333,7 +368,53 @@ function doPost(e) {
       amenities,
       combo,
       "confirmed"
-    ]);
+    ];
+
+    // 7. Write to the branch's dedicated spreadsheet
+    const branchSpreadsheet = getLocationSpreadsheet(rawLocation);
+    let branchTargetSheet = null;
+    if (branchSpreadsheet) {
+      branchTargetSheet = getBookingTargetSheet(branchSpreadsheet, rawLocation);
+      if (branchTargetSheet) {
+        branchTargetSheet.appendRow(bookingRow);
+      }
+    }
+
+    // 8. AT THE SAME TIME: Write to the Main Master Spreadsheet ("All Bookings")
+    if (masterSS) {
+      let masterAllSheet = masterSS.getSheetByName("All Bookings") || masterSS.getSheetByName("Bookings");
+      if (!masterAllSheet) {
+        masterAllSheet = masterSS.insertSheet("All Bookings", 0);
+        masterAllSheet.appendRow(BOOKING_HEADERS);
+        masterAllSheet.getRange(1, 1, 1, BOOKING_HEADERS.length)
+          .setFontWeight("bold")
+          .setBackground("#4A1E5F")
+          .setFontColor("#FFFFFF");
+      }
+
+      // Avoid duplicate appending if masterSS and branchSpreadsheet are the exact same sheet tab
+      const isSameSheet = branchSpreadsheet && 
+                          masterSS.getId() === branchSpreadsheet.getId() && 
+                          branchTargetSheet && 
+                          masterAllSheet.getName() === branchTargetSheet.getName();
+
+      if (!isSameSheet) {
+        masterAllSheet.appendRow(bookingRow);
+      }
+
+      // Also if a dedicated tab for this location exists in the master sheet, append there too
+      let masterLocTab = masterSS.getSheetByName(targetLocationName);
+      if (masterLocTab && masterLocTab.getName() !== masterAllSheet.getName()) {
+        if (masterLocTab.getLastRow() === 0) {
+          masterLocTab.appendRow(BOOKING_HEADERS);
+          masterLocTab.getRange(1, 1, 1, BOOKING_HEADERS.length)
+            .setFontWeight("bold")
+            .setBackground("#4A1E5F")
+            .setFontColor("#FFFFFF");
+        }
+        masterLocTab.appendRow(bookingRow);
+      }
+    }
 
     // Ensure write is immediately committed to Google Sheets
     SpreadsheetApp.flush();
@@ -342,9 +423,10 @@ function doPost(e) {
       success: true,
       bookingId: bookingId,
       location: targetLocationName,
-      spreadsheetName: branchSpreadsheet ? branchSpreadsheet.getName() : targetLocationName,
-      spreadsheetUrl: branchSpreadsheet ? branchSpreadsheet.getUrl() : '',
-      message: "Celebration slot booked successfully in " + targetLocationName + "!"
+      branchSpreadsheet: branchSpreadsheet ? branchSpreadsheet.getName() : targetLocationName,
+      branchUrl: branchSpreadsheet ? branchSpreadsheet.getUrl() : '',
+      masterRecorded: !!masterSS,
+      message: "Celebration slot booked successfully in " + targetLocationName + " and Master Sheet!"
     });
 
   } catch (err) {
@@ -393,7 +475,7 @@ function normalizeSlot(val) {
 
 /**
  * Computes available slots for a specific location and date
- * Reads bookings directly from the branch's dedicated spreadsheet
+ * Reads bookings directly from the branch's dedicated spreadsheet & master spreadsheet
  */
 function computeAvailableSlots(ss, location, date) {
   // 1. Base slots (from Slots config sheet or defaults)
@@ -403,8 +485,9 @@ function computeAvailableSlots(ss, location, date) {
     "05:30 PM", "06:30 PM", "07:30 PM", "08:30 PM"
   ];
 
-  if (ss) {
-    const slotsSheet = ss.getSheetByName("Slots");
+  const masterSS = ss || getMasterSpreadsheet();
+  if (masterSS) {
+    const slotsSheet = masterSS.getSheetByName("Slots");
     if (slotsSheet) {
       const slotsData = slotsSheet.getDataRange().getDisplayValues();
       if (slotsData.length > 1) {
@@ -427,7 +510,7 @@ function computeAvailableSlots(ss, location, date) {
   // 2. Find booked slots from the branch's dedicated spreadsheet
   const bookedSlots = new Set();
   const targetLocationName = getLocationSheetName(location);
-  const branchSS = getLocationSpreadsheet(location) || ss;
+  const branchSS = getLocationSpreadsheet(location) || masterSS;
 
   if (branchSS) {
     const targetSheet = getBookingTargetSheet(branchSS, location);
@@ -448,19 +531,21 @@ function computeAvailableSlots(ss, location, date) {
     }
   }
 
-  // Fallback: Check active master spreadsheet if different from branch spreadsheet
-  if (ss && branchSS && ss.getId() !== branchSS.getId()) {
-    const legacySheet = ss.getSheetByName("Bookings") || ss.getSheetByName(targetLocationName);
-    if (legacySheet) {
-      const legacyData = legacySheet.getDataRange().getValues();
-      for (let i = 1; i < legacyData.length; i++) {
-        const rowLoc = (legacyData[i][2] || '').toString().toLowerCase().trim();
-        let rowDate = (legacyData[i][3] || '').toString().trim();
-        if (legacyData[i][3] instanceof Date) {
-          rowDate = Utilities.formatDate(legacyData[i][3], TIMEZONE, "yyyy-MM-dd");
+  // Fallback: Also check master spreadsheet's All Bookings / Bookings / location tab
+  if (masterSS && (!branchSS || masterSS.getId() !== branchSS.getId())) {
+    const masterCheckSheet = masterSS.getSheetByName("All Bookings") || 
+                             masterSS.getSheetByName("Bookings") || 
+                             masterSS.getSheetByName(targetLocationName);
+    if (masterCheckSheet) {
+      const masterData = masterCheckSheet.getDataRange().getValues();
+      for (let i = 1; i < masterData.length; i++) {
+        const rowLoc = (masterData[i][2] || '').toString().toLowerCase().trim();
+        let rowDate = (masterData[i][3] || '').toString().trim();
+        if (masterData[i][3] instanceof Date) {
+          rowDate = Utilities.formatDate(masterData[i][3], TIMEZONE, "yyyy-MM-dd");
         }
-        const rowSlot = normalizeSlot(legacyData[i][4]);
-        const rowStatus = (legacyData[i][14] || '').toString().toLowerCase().trim();
+        const rowSlot = normalizeSlot(masterData[i][4]);
+        const rowStatus = (masterData[i][14] || '').toString().toLowerCase().trim();
 
         const isMatching = rowLoc.indexOf(location.toLowerCase()) !== -1 || rowLoc === targetLocationName.toLowerCase();
         if (isMatching && rowDate === date && (rowStatus === 'confirmed' || rowStatus === 'pending')) {
@@ -475,12 +560,13 @@ function computeAvailableSlots(ss, location, date) {
 
 /**
  * Helper to check if a slot is already occupied
- * Checks the dedicated branch spreadsheet
+ * Checks the dedicated branch spreadsheet and master spreadsheet
  */
 function isSlotAlreadyBooked(ss, location, date, timeSlot) {
   const targetSlotNorm = normalizeSlot(timeSlot);
   const targetLocationName = getLocationSheetName(location);
-  const branchSS = getLocationSpreadsheet(location) || ss;
+  const masterSS = ss || getMasterSpreadsheet();
+  const branchSS = getLocationSpreadsheet(location) || masterSS;
 
   if (branchSS) {
     const targetSheet = getBookingTargetSheet(branchSS, location);
@@ -503,11 +589,13 @@ function isSlotAlreadyBooked(ss, location, date, timeSlot) {
     }
   }
 
-  // Fallback: Check master spreadsheet if different
-  if (ss && branchSS && ss.getId() !== branchSS.getId()) {
-    const legacySheet = ss.getSheetByName("Bookings") || ss.getSheetByName(targetLocationName);
-    if (legacySheet) {
-      const data = legacySheet.getDataRange().getValues();
+  // Also check master spreadsheet
+  if (masterSS && (!branchSS || masterSS.getId() !== branchSS.getId())) {
+    const masterCheckSheet = masterSS.getSheetByName("All Bookings") || 
+                             masterSS.getSheetByName("Bookings") || 
+                             masterSS.getSheetByName(targetLocationName);
+    if (masterCheckSheet) {
+      const data = masterCheckSheet.getDataRange().getValues();
       for (let i = 1; i < data.length; i++) {
         const rowLoc = (data[i][2] || '').toString().toLowerCase().trim();
         let rowDate = (data[i][3] || '').toString().trim();
@@ -587,7 +675,7 @@ function setupSeparateBranchSpreadsheets() {
     if (!ss) {
       ss = SpreadsheetApp.create(b.name);
       props.setProperty('SPREADSHEET_' + b.key.toUpperCase(), ss.getId());
-      Logger.log("Created new spreadsheet: " + b.name + " (" + ss.getId() + ")");
+      Logger.log("Created new branch spreadsheet: " + b.name + " (" + ss.getId() + ")");
     }
 
     // Setup headers on its primary sheet
@@ -611,11 +699,11 @@ function setupSeparateBranchSpreadsheets() {
 
   // If running from a master spreadsheet, write a summary "Branch Links" tab
   try {
-    const masterSS = SpreadsheetApp.getActiveSpreadsheet();
+    const masterSS = getMasterSpreadsheet() || SpreadsheetApp.getActiveSpreadsheet();
     if (masterSS) {
       let linkSheet = masterSS.getSheetByName("Branch Links");
       if (!linkSheet) {
-        linkSheet = masterSS.insertSheet("Branch Links", 0);
+        linkSheet = masterSS.insertSheet("Branch Links", 1);
       }
       linkSheet.clear();
       linkSheet.appendRow(["Branch Name", "Location Code", "Dedicated Spreadsheet Link", "Spreadsheet ID"]);
@@ -632,7 +720,7 @@ function setupSeparateBranchSpreadsheets() {
       linkSheet.autoResizeColumns(1, 4);
     }
   } catch (e) {
-    Logger.log("Note: Running as standalone script or couldn't write to master sheet: " + e.toString());
+    Logger.log("Note: Could not write Branch Links tab to master sheet: " + e.toString());
   }
 
   Logger.log("\n==================================================================");
@@ -649,21 +737,41 @@ function setupSeparateBranchSpreadsheets() {
  * ============================================================================
  * ONE-CLICK COMPLETE SETUP FUNCTION:
  * Run this in Apps Script Editor to set up:
- * 1. The 4 dedicated branch spreadsheets
- * 2. The configuration sheets (Locations, Slots, Combos, Amenities, Settings)
+ * 1. The central Master Spreadsheet ("All Bookings", "Branch Links", Config)
+ * 2. The 4 dedicated branch spreadsheets
  * ============================================================================
  */
 function setupInitialSheets() {
-  // 1. Create/configure the 4 dedicated branch spreadsheets
+  const masterSS = getMasterSpreadsheet() || SpreadsheetApp.getActiveSpreadsheet();
+  if (masterSS) {
+    try {
+      const props = PropertiesService.getScriptProperties();
+      props.setProperty('MASTER_SPREADSHEET_ID', masterSS.getId());
+    } catch (e) {}
+
+    // 1. Central Sheet: All Bookings (Unified feed for all branches)
+    let allBookingsSheet = masterSS.getSheetByName("All Bookings");
+    if (!allBookingsSheet) {
+      allBookingsSheet = masterSS.insertSheet("All Bookings", 0);
+    }
+    if (allBookingsSheet.getLastRow() === 0) {
+      allBookingsSheet.appendRow(BOOKING_HEADERS);
+    }
+    allBookingsSheet.getRange(1, 1, 1, BOOKING_HEADERS.length)
+      .setFontWeight("bold")
+      .setBackground("#4A1E5F")
+      .setFontColor("#FFFFFF");
+  }
+
+  // 2. Create/configure the 4 dedicated branch spreadsheets & write Branch Links tab
   setupSeparateBranchSpreadsheets();
 
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (!ss) return;
+  if (!masterSS) return;
 
-  // 2. Sheet: Locations (Config)
-  let locSheet = ss.getSheetByName("Locations");
+  // 3. Sheet: Locations (Config)
+  let locSheet = masterSS.getSheetByName("Locations");
   if (!locSheet) {
-    locSheet = ss.insertSheet("Locations");
+    locSheet = masterSS.insertSheet("Locations");
   }
   locSheet.clear();
   locSheet.appendRow(["id", "name", "description", "address", "capacity", "active"]);
@@ -701,10 +809,10 @@ function setupInitialSheets() {
   ]);
   locSheet.getRange(1, 1, 1, 6).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
 
-  // 3. Sheet: Slots (Config)
-  let slotsSheet = ss.getSheetByName("Slots");
+  // 4. Sheet: Slots (Config)
+  let slotsSheet = masterSS.getSheetByName("Slots");
   if (!slotsSheet) {
-    slotsSheet = ss.insertSheet("Slots");
+    slotsSheet = masterSS.insertSheet("Slots");
   }
   slotsSheet.clear();
   slotsSheet.appendRow(["location_id", "day", "time", "active"]);
@@ -718,10 +826,10 @@ function setupInitialSheets() {
   });
   slotsSheet.getRange(1, 1, 1, 4).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
 
-  // 4. Sheet: Combos (Config)
-  let comboSheet = ss.getSheetByName("Combos");
+  // 5. Sheet: Combos (Config)
+  let comboSheet = masterSS.getSheetByName("Combos");
   if (!comboSheet) {
-    comboSheet = ss.insertSheet("Combos");
+    comboSheet = masterSS.insertSheet("Combos");
   }
   comboSheet.clear();
   comboSheet.appendRow(["id", "name", "description", "price", "active"]);
@@ -732,10 +840,10 @@ function setupInitialSheets() {
   comboSheet.appendRow(["groom_to_be_combo", "Groom to be Combo", "Sash, Badges, Party Poppers (GC1-GC8)", 455, true]);
   comboSheet.getRange(1, 1, 1, 5).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
 
-  // 5. Sheet: Amenities (Config)
-  let amenSheet = ss.getSheetByName("Amenities");
+  // 6. Sheet: Amenities (Config)
+  let amenSheet = masterSS.getSheetByName("Amenities");
   if (!amenSheet) {
-    amenSheet = ss.insertSheet("Amenities");
+    amenSheet = masterSS.insertSheet("Amenities");
   }
   amenSheet.clear();
   amenSheet.appendRow(["id", "name", "description", "price", "is_complimentary", "active"]);
@@ -745,10 +853,10 @@ function setupInitialSheets() {
   amenSheet.appendRow(["welcome_drink", "Welcome Drink", "Complimentary signature welcome drink", 0, true, true]);
   amenSheet.getRange(1, 1, 1, 6).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
 
-  // 6. Sheet: Settings (Config)
-  let settingsSheet = ss.getSheetByName("Settings");
+  // 7. Sheet: Settings (Config)
+  let settingsSheet = masterSS.getSheetByName("Settings");
   if (!settingsSheet) {
-    settingsSheet = ss.insertSheet("Settings");
+    settingsSheet = masterSS.insertSheet("Settings");
   }
   settingsSheet.clear();
   settingsSheet.appendRow(["key", "value"]);
@@ -758,5 +866,5 @@ function setupInitialSheets() {
   settingsSheet.appendRow(["booking_window_days", 45]);
   settingsSheet.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
 
-  Logger.log("✅ All branch spreadsheets & config sheets successfully initialized!");
+  Logger.log("✅ Master Sheet ('All Bookings' + Config) and 4 branch spreadsheets successfully initialized!");
 }
