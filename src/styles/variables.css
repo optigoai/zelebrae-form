@@ -1,0 +1,73 @@
+:root {
+  /* Zelebrae Brand Palette */
+  --color-brand-purple: #4A1E5F;
+  --color-brand-purple-dark: #320F43;
+  --color-brand-purple-light: #6A3285;
+  --color-brand-purple-soft: #F4EEF7;
+  --color-brand-purple-glow: rgba(74, 30, 95, 0.12);
+
+  /* Primary CTA (Vibrant Green for high conversion & friendliness) */
+  --color-cta-green: #1B8755;
+  --color-cta-green-hover: #146C43;
+  --color-cta-green-active: #0F5132;
+  --color-cta-green-soft: #E8F5E9;
+  --color-cta-green-glow: rgba(27, 135, 85, 0.25);
+
+  /* Warm Celebration Backgrounds */
+  --color-bg-main: #FAF8F5;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-subtle: #F5EFE6;
+  --color-bg-card: #FFFFFF;
+  --color-bg-highlight: #FFFDF9;
+
+  /* Typography Colors */
+  --color-text-primary: #1C1917;
+  --color-text-secondary: #4A1E5F;
+  --color-text-muted: #6B7280;
+  --color-text-tertiary: #9CA3AF;
+  --color-text-inverse: #FFFFFF;
+
+  /* Accents & Status */
+  --color-accent-gold: #D97706;
+  --color-accent-amber-soft: #FEF3C7;
+  --color-accent-rose: #E11D48;
+  --color-accent-rose-soft: #FFE4E6;
+  --color-status-error: #DC2626;
+  --color-status-error-bg: #FEF2F2;
+  --color-status-success: #16A34A;
+  --color-status-booked: #9CA3AF;
+
+  /* Borders & Dividers */
+  --color-border-subtle: #EBE5DC;
+  --color-border-card: #E5DFD5;
+  --color-border-active: #4A1E5F;
+  --color-border-green: #1B8755;
+
+  /* Typography */
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  /* Elevation Shadows */
+  --shadow-xs: 0 1px 2px rgba(74, 30, 95, 0.04);
+  --shadow-sm: 0 2px 8px rgba(74, 30, 95, 0.06);
+  --shadow-md: 0 8px 24px -4px rgba(74, 30, 95, 0.08);
+  --shadow-lg: 0 16px 36px -6px rgba(74, 30, 95, 0.12);
+  --shadow-cta: 0 6px 20px rgba(27, 135, 85, 0.35);
+
+  /* Border Radii */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout Dimensions */
+  --max-content-width: 720px;
+  --header-height: 68px;
+  --bottom-bar-height: 80px;
+}

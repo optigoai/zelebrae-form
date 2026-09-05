@@ -1,0 +1,217 @@
+@import './variables.css';
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  background-color: var(--color-bg-main);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--color-bg-main);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* App Container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--color-bg-main);
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  padding: 1.25rem 1rem calc(var(--bottom-bar-height) + 2rem) 1rem;
+}
+
+@media (min-width: 640px) {
+  .main-content {
+    padding: 2rem 1.5rem calc(var(--bottom-bar-height) + 2.5rem) 1.5rem;
+  }
+}
+
+/* Headings */
+h1, h2, h3, .heading-serif {
+  font-family: var(--font-heading);
+  color: var(--color-brand-purple);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  line-height: 1.25;
+}
+
+h3 {
+  font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+  line-height: 1.3;
+}
+
+p {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+/* Accessible focus visible */
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, a:focus-visible {
+  outline: 2px solid var(--color-brand-purple);
+  outline-offset: 2px;
+}
+
+/* Reusable Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.badge-purple {
+  background-color: var(--color-brand-purple-soft);
+  color: var(--color-brand-purple);
+}
+
+.badge-green {
+  background-color: var(--color-cta-green-soft);
+  color: var(--color-cta-green);
+}
+
+.badge-gold {
+  background-color: var(--color-accent-amber-soft);
+  color: var(--color-accent-gold);
+}
+
+/* Core Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  padding: 0.85rem 1.6rem;
+  transition: all var(--transition-normal);
+  text-decoration: none;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-cta {
+  background-color: var(--color-cta-green);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-cta);
+}
+
+.btn-cta:hover:not(:disabled) {
+  background-color: var(--color-cta-green-hover);
+  box-shadow: 0 8px 24px rgba(27, 135, 85, 0.42);
+  transform: translateY(-1px);
+}
+
+.btn-cta:disabled {
+  background-color: #A7CBB6;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-purple {
+  background-color: var(--color-brand-purple);
+  color: var(--color-text-inverse);
+}
+
+.btn-purple:hover:not(:disabled) {
+  background-color: var(--color-brand-purple-dark);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-brand-purple);
+  border: 1.5px solid var(--color-border-card);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--color-brand-purple);
+  background-color: var(--color-brand-purple-soft);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-text-muted);
+  padding: 0.6rem 1rem;
+}
+
+.btn-ghost:hover {
+  color: var(--color-brand-purple);
+  background-color: var(--color-brand-purple-soft);
+}
+
+/* Keyframes & Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(27, 135, 85, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(27, 135, 85, 0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
