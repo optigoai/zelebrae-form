@@ -39,10 +39,6 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
           <Sparkles size={14} />
           Step 4 of 5
         </span>
-        <h1 className="step-title">Make your celebration special</h1>
-        <p className="step-subtitle">
-          Enjoy included standard amenities and pick your celebratory party combo.
-        </p>
       </div>
 
       {/* Section 1: Included Amenities (Only 4, no green complimentary badge) */}
@@ -83,7 +79,6 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
                   <div className="amenity-title-row">
                     <span className="amenity-title">{amenity.name}</span>
                   </div>
-                  <p className="amenity-desc">{amenity.description}</p>
                 </div>
 
                 <div className="custom-checkbox">
@@ -103,9 +98,6 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
               <Gift size={20} color="#4A1E5F" />
               Party Accessories & Combos
             </h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-              Select a curated party pack to arrive completely decorated and ready to celebrate.
-            </p>
           </div>
 
           <a
@@ -113,15 +105,15 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-ghost"
-            style={{ 
-              fontSize: '0.82rem', 
-              padding: '0.35rem 0.65rem', 
-              color: 'var(--color-brand-purple)', 
-              fontWeight: 700, 
-              textDecoration: 'none', 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '0.35rem' 
+            style={{
+              fontSize: '0.82rem',
+              padding: '0.35rem 0.65rem',
+              color: 'var(--color-brand-purple)',
+              fontWeight: 700,
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem'
             }}
             title="Open Zelebrae Combo Menu in Google Drive"
           >
@@ -196,7 +188,7 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
 
                 {/* Dropdown for variant / price selection when combo is selected */}
                 {isSelected && combo.options && combo.options.length > 0 && (
-                  <div 
+                  <div
                     className="combo-dropdown-wrapper"
                     onClick={(e) => e.stopPropagation()}
                   >

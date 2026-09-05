@@ -48,9 +48,7 @@ export const StepOccasionGuests: React.FC<StepOccasionGuestsProps> = ({
           Step 2 of 5
         </span>
         <h1 className="step-title">What are you celebrating?</h1>
-        <p className="step-subtitle">
-          Choose the occasion and let us know how many guests will join you.
-        </p>
+
       </div>
 
       {/* Occasion Cards */}
@@ -82,7 +80,6 @@ export const StepOccasionGuests: React.FC<StepOccasionGuestsProps> = ({
                 <OccasionIcon iconName={occ.icon} size={22} />
               </div>
               <div className="occasion-title">{occ.name}</div>
-              <div className="occasion-desc">{occ.description}</div>
             </div>
           );
         })}
@@ -91,8 +88,8 @@ export const StepOccasionGuests: React.FC<StepOccasionGuestsProps> = ({
       {/* Custom Occasion Text input if 'other' is chosen */}
       {selectedOccasion === 'other' && (
         <div className="custom-occasion-box animate-scale-in">
-          <label 
-            htmlFor="customOccasionInput" 
+          <label
+            htmlFor="customOccasionInput"
             style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-brand-purple)', marginBottom: '0.4rem' }}
           >
             Please specify your celebration:

@@ -3,63 +3,43 @@ import { AppConfig, CelebrationLocation, Occasion, Amenity, ComboItem } from '..
 export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
   {
     id: 'pantheerankavu',
-    name: 'Pantheerankavu Celebration Point',
-    tagline: 'Spacious private celebration lounge & bakery space',
+    name: 'Pantheerankavu',
+    tagline: '',
     address: 'Near Pantheerankavu Bypass Junction, Kozhikode, Kerala 673019',
     image: '/hero.webp',
     maxCapacity: 15,
     active: true,
-    features: [
-      'Floral Backdrop with Neon Celebration sign',
-      'Dedicated cake cutting station & pedestals',
-      'Air-conditioned private celebration lounge',
-      'Bluetooth Sound System & Wireless Mic'
-    ]
+    features: []
   },
   {
     id: 'karaparamba',
-    name: 'Karaparamba Celebration Point',
-    tagline: 'Intimate floral celebration nook & cafe space',
+    name: 'Karaparamba',
+    tagline: '',
     address: 'Near Karaparamba Junction, Kozhikode, Kerala 673010',
     image: '/hero.webp',
     maxCapacity: 15,
     active: true,
-    features: [
-      'Floral Backdrop with Neon Celebration sign',
-      'Dedicated cake cutting station & pedestals',
-      'Air-conditioned private celebration nook',
-      'Bluetooth Sound System & Wireless Mic'
-    ]
+    features: []
   },
   {
     id: 'ashokapuram',
-    name: 'Ashokapuram Celebration Point',
-    tagline: 'Signature floral celebration nook & cafe space',
+    name: 'Ashokapuram',
+    tagline: '',
     address: 'Near Baby Memorial Hospital, Ashokapuram, Kozhikode, Kerala 673006',
     image: '/hero.webp',
     maxCapacity: 15,
     active: true,
-    features: [
-      'Floral Backdrop with Neon "Happy Birthday" sign',
-      'Dedicated cake cutting station & pedestals',
-      'Air-conditioned private dining nook',
-      'Bluetooth Sound System & Wireless Mic'
-    ]
+    features: []
   },
   {
     id: 'arakkinar',
-    name: 'Arakkinar Celebration Point',
-    tagline: 'Modern celebration party lounge & outlet',
+    name: 'Arakkinar',
+    tagline: '',
     address: 'Arakkinar, Beypore Road, Kozhikode, Kerala 673028',
     image: '/hero.webp',
     maxCapacity: 15,
     active: true,
-    features: [
-      'Floral Backdrop with Neon Celebration sign',
-      'Dedicated cake cutting station & pedestals',
-      'Air-conditioned private party lounge',
-      'Bluetooth Sound System & Wireless Mic'
-    ]
+    features: []
   }
 ];
 
@@ -68,42 +48,42 @@ export const DEFAULT_OCCASIONS: Occasion[] = [
     id: 'birthday',
     name: 'Birthday',
     icon: 'cake',
-    description: 'Celebrate another fabulous year with sweetness',
+    description: '',
     popular: true
   },
   {
     id: 'anniversary',
     name: 'Anniversary',
     icon: 'heart',
-    description: 'Cherish love and milestones together',
+    description: '',
     popular: true
   },
   {
     id: 'bride_to_be',
     name: 'Bride to Be',
     icon: 'crown',
-    description: 'Shower the future bride with love & laughter',
+    description: '',
     popular: false
   },
   {
     id: 'groom_to_be',
     name: 'Groom to Be',
     icon: 'sparkles',
-    description: 'Toast to the groom ahead of the big day',
+    description: '',
     popular: false
   },
   {
     id: 'mom_to_be',
     name: 'Mom to Be',
     icon: 'baby',
-    description: 'A cozy, joyful baby shower gathering',
+    description: '',
     popular: false
   },
   {
     id: 'other',
     name: 'Other Milestone',
     icon: 'party-popper',
-    description: 'Promotions, graduations, farewells & more',
+    description: '',
     popular: false
   }
 ];
@@ -113,7 +93,7 @@ export const DEFAULT_AMENITIES: Amenity[] = [
     id: 'basic_decorations',
     name: 'Basic Decorations',
     icon: 'sparkles',
-    description: 'Signature floral backdrop and neon celebration decor',
+    description: '',
     isComplimentary: true,
     active: true
   },
@@ -121,7 +101,7 @@ export const DEFAULT_AMENITIES: Amenity[] = [
     id: 'music_mic',
     name: 'Background Music & Mic',
     icon: 'music',
-    description: 'High-fidelity Bluetooth speaker and announcement mic',
+    description: '',
     isComplimentary: true,
     active: true
   },
@@ -129,7 +109,7 @@ export const DEFAULT_AMENITIES: Amenity[] = [
     id: 'ac_hall',
     name: 'AC Hall',
     icon: 'wind',
-    description: 'Comfortable air-conditioned celebration space',
+    description: '',
     isComplimentary: true,
     active: true
   },
@@ -137,7 +117,7 @@ export const DEFAULT_AMENITIES: Amenity[] = [
     id: 'welcome_drink',
     name: 'Welcome Drink',
     icon: 'glass-water',
-    description: 'Signature chilled welcome drinks for you and your guests',
+    description: '',
     isComplimentary: true,
     active: true
   }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, MapPin, CheckCircle2, ShieldCheck, Check } from 'lucide-react';
+import { MapPin, Check } from 'lucide-react';
 import { CelebrationLocation } from '../types/booking';
 
 interface StepLocationProps {
@@ -21,47 +21,21 @@ export const StepLocation: React.FC<StepLocationProps> = ({
       {/* Step Header */}
       <div className="step-header">
         <span className="step-tag">
-          <Sparkles size={14} />
           Welcome to Zelebrae
         </span>
         <h1 className="step-title">Reserve Your Sweet Moment</h1>
-        <p className="step-subtitle">
-          Enjoy our complimentary private celebration lounge with every cake pre-order.
-        </p>
+
       </div>
 
-      {/* Hero Showcase Image (Shown Once) */}
+      {/* Hero Showcase Image (Clean Image, No Words) */}
       <div className="hero-showcase-card">
         <div className="hero-showcase-media">
-          <img 
-            src="/hero.webp" 
-            alt="Zelebrae Celebration Point" 
+          <img
+            src="/hero.webp"
+            alt="Zelebrae Celebration Point"
             className="hero-showcase-img"
             loading="eager"
           />
-          <div className="location-badge-overlay">
-            <Sparkles size={14} color="#FDE68A" />
-            <span>Complimentary Celebration Space</span>
-          </div>
-        </div>
-
-        <div className="hero-showcase-features">
-          <div className="hero-feature-item">
-            <CheckCircle2 size={15} color="#1B8755" />
-            <span>Floral Backdrop & Neon Sign</span>
-          </div>
-          <div className="hero-feature-item">
-            <CheckCircle2 size={15} color="#1B8755" />
-            <span>Private AC Celebration Nook</span>
-          </div>
-          <div className="hero-feature-item">
-            <CheckCircle2 size={15} color="#1B8755" />
-            <span>Sound System & Wireless Mic</span>
-          </div>
-          <div className="hero-feature-item">
-            <ShieldCheck size={15} color="#1B8755" />
-            <span>1-Hr Slot with Cake Pre-Order</span>
-          </div>
         </div>
       </div>
 
@@ -72,12 +46,9 @@ export const StepLocation: React.FC<StepLocationProps> = ({
             <MapPin size={17} color="#4A1E5F" />
             Select Celebration Location
           </h3>
-          <p style={{ fontSize: '0.84rem', color: 'var(--color-text-muted)' }}>
-            Choose which Zelebrae branch you would like to book for your special moment.
-          </p>
         </div>
 
-        {/* 4 Location Cards with Clean Names */}
+        {/* 4 Location Cards with Clean Names Only */}
         <div className="location-names-grid" role="radiogroup" aria-label="Select Celebration Location">
           {locations.map((loc) => {
             const isSelected = selectedLocationId === loc.id;
@@ -114,7 +85,6 @@ export const StepLocation: React.FC<StepLocationProps> = ({
 
                 <div className="location-card-info">
                   <h4 className="location-single-name">{shortName}</h4>
-                  <p className="location-single-subtext">{loc.tagline || 'Celebration Point'}</p>
                 </div>
               </div>
             );
@@ -124,17 +94,14 @@ export const StepLocation: React.FC<StepLocationProps> = ({
         {/* Selected Branch Address Info */}
         {selectedLocation && (
           <div className="selected-location-details animate-fade-in">
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
-              <MapPin size={18} color="#4A1E5F" style={{ marginTop: '2px', flexShrink: 0 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <MapPin size={18} color="#4A1E5F" style={{ flexShrink: 0 }} />
               <div>
                 <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-brand-purple)' }}>
-                  {selectedLocation.name}
+                  {selectedLocation.name.replace(' Celebration Point', '')}
                 </div>
                 <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
                   {selectedLocation.address}
-                </div>
-                <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', marginTop: '4px', fontWeight: 600 }}>
-                  Capacity: Up to {selectedLocation.maxCapacity} Guests • Private 1-Hour Slot
                 </div>
               </div>
             </div>

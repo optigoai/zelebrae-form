@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import { bookingApi } from '../services/bookingApi';
-import { 
-  getKolkataToday, 
-  formatCelebrationDate, 
-  isPastDate, 
+import {
+  getKolkataToday,
+  formatCelebrationDate,
+  isPastDate,
   addDays,
   normalizeSlotTime
 } from '../utils/dateUtils';
@@ -117,9 +117,7 @@ export const StepDateTime: React.FC<StepDateTimeProps> = ({
           Step 3 of 5
         </span>
         <h1 className="step-title">Select Date & Time</h1>
-        <p className="step-subtitle">
-          Choose your celebration date and pick an available 1-hour private slot.
-        </p>
+
       </div>
 
       {/* Calendar Card */}
