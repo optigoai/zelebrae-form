@@ -81,21 +81,31 @@ Follow these simple steps to connect the booking application to your live Google
 2. Copy the entire content and paste it into the `Code.gs` editor in Apps Script, replacing any default template code.
 3. Click **Save** (Ctrl+S / Cmd+S).
 
-### Step 4: Run One-Click Sheet Initialization
-1. In the Apps Script toolbar, select the function **`setupInitialSheets`** from the function dropdown.
+### Step 4: Run One-Click Branch Spreadsheet Setup
+1. In the Apps Script toolbar, select the function **`setupInitialSheets`** (or **`setupSeparateBranchSpreadsheets`**) from the function dropdown.
 2. Click **Run**.
 3. Google will ask for authorization on the first run:
    - Click *Review permissions*
    - Choose your Google account
    - Click *Advanced* → *Go to Zelebrae Booking API (unsafe)*
    - Click *Allow*
-4. In a few seconds, look at your Google Spreadsheet! All **6 sheets** (`Bookings`, `Locations`, `Slots`, `Combos`, `Amenities`, `Settings`) will be created and pre-filled with styled headers and sample data!
+4. In a few seconds:
+   - **4 separate Google Spreadsheets** are created in your Google Drive:
+     1. `Zelebrae Bookings - Pantheerankavu`
+     2. `Zelebrae Bookings - Karaparamba`
+     3. `Zelebrae Bookings - Ashokapuram`
+     4. `Zelebrae Bookings - Arakkinar`
+   - In your Master spreadsheet, a **`Branch Links`** tab is created listing each branch's exact Google Sheet URL!
+   - Each sheet is styled with brand-purple headers (`#4A1E5F`).
+
+> **🔒 Complete Branch Privacy**:
+> Share each Google Sheet link **ONLY** with the respective branch manager/team. Because each branch has its own independent spreadsheet file, staff at one branch **cannot see** any booking data from the other branches!
 
 ### Step 5: Deploy as Web App
-1. At the top right of the Apps Script editor, click **Deploy** → **New deployment**.
+1. At the top right of the Apps Script editor, click **Deploy** → **New deployment** (or **Manage deployments** → edit to deploy a **New Version** if updating).
 2. Click the gear icon next to "Select type" and choose **Web app**.
 3. Fill in the deployment details:
-   - **Description**: `Zelebrae Celebration API v1`
+   - **Description**: `Zelebrae Celebration API (Branch Isolation)`
    - **Execute as**: **Me** (`your-email@gmail.com`)
    - **Who has access**: **Anyone** *(Important: Allows the frontend to read availability and submit bookings without customer Google login)*
 4. Click **Deploy**.
@@ -132,17 +142,17 @@ Double-booking is prevented using a two-tier strategy:
 flowchart TD
     A[Customer submits reservation] --> B[Google Apps Script receives POST]
     B --> C[LockService.getScriptLock.tryLock 30s]
-    C --> D{Fresh check: Is location + date + time_slot active?}
-    D -- NO --> E[Append row to Bookings sheet with status 'confirmed']
+    C --> D{Fresh check: Is date + time_slot active in branch spreadsheet?}
+    D -- NO --> E[Append row ONLY to that branch's dedicated spreadsheet with status 'confirmed']
     E --> F[Generate Booking ID ZB-YYYYMMDD-XXX]
     F --> G[Release lock & Return Success 200]
     D -- YES --> H[Release lock & Return SLOT_ALREADY_BOOKED]
     H --> I[Frontend notifies customer & auto-refreshes slot list]
 ```
 
-1. **Frontend Availability**: Available slots for the selected date are dynamically loaded from Google Sheets.
+1. **Frontend Availability**: Available slots for the selected branch and date are dynamically loaded from that branch's dedicated spreadsheet.
 2. **Server-Side Locking**: When a customer confirms, Google Apps Script acquires an exclusive script lock via `LockService.getScriptLock().tryLock(30000)`.
-3. **Atomic Collision Check**: The `Bookings` sheet is freshly examined for any booking matching `location + date + time_slot` where `status` is `confirmed` or `pending`.
+3. **Atomic Collision Check**: The branch's dedicated spreadsheet is freshly examined for any booking matching `date + time_slot` where `status` is `confirmed` or `pending`.
 4. **Race Resolution**: If another customer booked that millisecond, the lock ensures the second request receives `{ "success": false, "error": "SLOT_ALREADY_BOOKED" }`. The frontend immediately shows a friendly message and refreshes available slots.
 
 ---

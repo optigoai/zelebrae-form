@@ -1,30 +1,47 @@
 # Google Sheets Schema & Data Model — Zelebrae Pastries
 
-This document outlines the spreadsheet schema used by the Zelebrae Pastries Celebration Point Booking System.
-
-Google Sheets serves as the database and lightweight admin panel. The business team can view, manage, and modify bookings, slots, pricing, and amenities directly in Google Sheets without modifying frontend code.
+This document outlines the spreadsheet schema and branch isolation architecture used by the Zelebrae Pastries Celebration Point Booking System.
 
 ---
 
-## 1. Sheet: `Bookings`
-Stores all customer celebration reservations.
+## 🔒 Complete Branch Isolation (4 Separate Spreadsheet Links)
+
+To ensure that **branches cannot see each other's booking data**, each of the 4 celebration locations has its **own separate Google Spreadsheet file** in Google Drive:
+
+1. **`Zelebrae Bookings - Pantheerankavu`** (Dedicated Link 1)
+2. **`Zelebrae Bookings - Karaparamba`** (Dedicated Link 2)
+3. **`Zelebrae Bookings - Ashokapuram`** (Dedicated Link 3)
+4. **`Zelebrae Bookings - Arakkinar`** (Dedicated Link 4)
+
+### Privacy & Access Control:
+- Give **Pantheerankavu staff** access **only** to the Pantheerankavu Google Sheet link.
+- Give **Karaparamba staff** access **only** to the Karaparamba Google Sheet link.
+- Give **Ashokapuram staff** access **only** to the Ashokapuram Google Sheet link.
+- Give **Arakkinar staff** access **only** to the Arakkinar Google Sheet link.
+- **Result**: No branch team can see, search, or edit any other branch's customer data or reservations.
+
+---
+
+## 1. Sheet Structure (Identical across all 4 Branch Spreadsheets)
+
+Within each branch spreadsheet, bookings are recorded in the primary **`Bookings`** sheet:
 
 | Column | Name | Type | Sample Value | Description |
 |---|---|---|---|---|
 | A | `booking_id` | String | `ZB-20260912-482` | Unique celebration reference identifier |
 | B | `created_at` | ISO Timestamp | `2026-09-05T12:45:00+05:30` | Reservation submission timestamp |
-| C | `location` | String | `ashokapuram` | Identifier of celebration point |
+| C | `location` | String | `Pantheerankavu` | Formatted celebration point name |
 | D | `date` | Date / String | `2026-09-12` | Celebration date (YYYY-MM-DD in Asia/Kolkata) |
-| E | `time_slot` | String | `04:00 PM` | Reserved 1-hour time slot |
+| E | `time_slot` | String | `'04:30 PM` | Reserved 1-hour time slot (prefixed with `'` to preserve exact time string) |
 | F | `name` | String | `Naveen Kumar` | Customer full name |
-| G | `customer_location`| String | `Ashokapuram, Kozhikode` | Customer residential area / city |
-| H | `whatsapp` | String | `+91 9847123456` | WhatsApp contact number for coordination |
+| G | `customer_location`| String | `Pantheerankavu, Kozhikode` | Customer residential area / city |
+| H | `whatsapp` | String | `'+91 9847123456` | WhatsApp contact number (prefixed with `'` to prevent `#ERROR!` formula parse) |
 | I | `email` | String | `naveen@example.com` | Optional email address |
 | J | `occasion` | String | `Birthday` | Celebration type (Birthday, Anniversary, etc.) |
 | K | `guests` | Integer | `6` | Number of attending guests (up to 15) |
 | L | `additional_requirements` | String | `Vanilla sponge with fresh strawberries` | Flavour, theme, or dietary notes |
-| M | `amenities` | String | `basic_decorations, music_mic, ac_hall` | Comma-separated list of selected amenities |
-| N | `combo` | String | `birthday_delight` | Selected celebration party combo |
+| M | `amenities` | String | `Basic Decorations, Background Music & Mic, AC Hall` | Comma-separated list of selected amenities |
+| N | `combo` | String | `Birthday Combo (DC1 - ₹350)` | Selected celebration party combo and package variant |
 | O | `status` | String | `confirmed` | Lifecycle status: `pending`, `confirmed`, `cancelled`, `completed` |
 
 ### Booking Status Lifecycle:
@@ -37,71 +54,12 @@ Stores all customer celebration reservations.
 
 ---
 
-## 2. Sheet: `Locations`
-Configures celebration points.
+## 2. Configuration Sheets (in Master Spreadsheet)
 
-| Column | Name | Type | Sample Value | Description |
-|---|---|---|---|---|
-| A | `id` | String | `pantheerankavu` | Primary location key (`pantheerankavu`, `karaparamba`, `ashokapuram`, `arakkinar`) |
-| B | `name` | String | `Pantheerankavu Celebration Point` | Display name |
-| C | `description` | String | `Spacious private celebration lounge & bakery space` | Tagline |
-| D | `address` | String | `Near Pantheerankavu Bypass Junction, Kozhikode` | Full physical address |
-| E | `capacity` | Integer | `15` | Maximum guest capacity |
-| F | `active` | Boolean | `TRUE` | Enable/disable location |
-
-### Preconfigured Locations:
-1. `pantheerankavu`: Pantheerankavu Celebration Point
-2. `karaparamba`: Karaparamba Celebration Point
-3. `ashokapuram`: Ashokapuram Celebration Point
-4. `arakkinar`: Arakkinar Celebration Point
-
----
-
-## 3. Sheet: `Slots`
-Defines available standard time slots for each celebration point.
-
-| Column | Name | Type | Sample Value | Description |
-|---|---|---|---|---|
-| A | `location_id` | String | `ALL` | Location ID or `ALL` |
-| B | `day` | String | `ALL` | `ALL` or specific day e.g. `SATURDAY` |
-| C | `time` | String | `09:30 AM` | Slot start time (`09:30 AM` to `08:30 PM`) |
-| D | `active` | Boolean | `TRUE` | Set `FALSE` to disable slot temporarily |
-
-> **Display Rule**: If a slot is booked or unavailable, it is displayed to the user on the frontend with a strikethrough and a **Booked** tag, remaining visible but disabled / non-clickable.
-
----
-
-## 4. Sheet: `Combos`
-Party celebration packs and accessory combos.
-
-| Column | Name | Type | Sample Value | Description |
-|---|---|---|---|---|
-| A | `id` | String | `birthday_delight` | Unique combo ID |
-| B | `name` | String | `Birthday Deluxe Combo` | Combo title |
-| C | `description` | String | `Sash, 3x Poppers, Cake Candle, Props` | Inclusions summary |
-| D | `price` | Number | `599` | Price in INR |
-| E | `active` | Boolean | `TRUE` | Enable/disable combo |
-
----
-
-## 5. Sheet: `Amenities`
-Celebration facilities and add-on services.
-
-| Column | Name | Type | Sample Value | Description |
-|---|---|---|---|---|
-| A | `id` | String | `welcome_drinks` | Amenity ID |
-| B | `name` | String | `Zelebrae Welcome Drinks` | Display name |
-| C | `description` | String | `Chilled signature mocktails for all guests` | Description |
-| D | `price` | Number | `349` | Price (0 for complimentary) |
-| E | `is_complimentary` | Boolean | `FALSE` | Complimentary indicator |
-| F | `active` | Boolean | `TRUE` | Active status |
-
----
-
-## 6. Sheet: `Settings`
-Global business settings and parameters.
-
-| Column | Name | Type | Sample Value | Description |
-|---|---|---|---|---|
-| A | `key` | String | `whatsapp_number` | Configuration key |
-| B | `value` | String / Number | `919072333600` | Business WhatsApp number |
+The master administration spreadsheet contains the centralized configuration tabs:
+- **`Branch Links`**: Auto-generated table containing all 4 branch names, location codes, spreadsheet links, and IDs.
+- **`Locations`**: Physical address, capacity, and active status for each location.
+- **`Slots`**: Active operating hours (`09:30 AM` to `08:30 PM`).
+- **`Combos`**: Celebration party accessory packages (`Birthday`, `Mom to Be`, `Bride to Be`, `Anniversary`, `Groom to be`).
+- **`Amenities`**: Included celebration amenities (`Basic Decorations`, `Background Music & Mic`, `AC Hall`, `Welcome Drink`).
+- **`Settings`**: Global WhatsApp coordination number, guest limits, and booking window.

@@ -16,7 +16,11 @@ export const Header: React.FC<HeaderProps> = ({ onRestart, locationName }) => {
           style={{ cursor: onRestart ? 'pointer' : 'default' }}
           title="Zelebrae Pastries"
         >
-          <div className="brand-logo-badge">Z</div>
+          <img 
+            src="/logo.png" 
+            alt="Zelebrae Pastries & Cafe" 
+            className="brand-logo-img" 
+          />
           <div className="brand-info">
             <span className="brand-title">Zelebrae</span>
             <span className="brand-subtitle">Celebration Point</span>

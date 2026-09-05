@@ -30,6 +30,20 @@
   text-decoration: none;
 }
 
+.brand-logo-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: contain;
+  box-shadow: 0 3px 8px rgba(74, 30, 95, 0.2);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.header-brand:hover .brand-logo-img {
+  transform: scale(1.05);
+}
+
 .brand-logo-badge {
   width: 42px;
   height: 42px;
