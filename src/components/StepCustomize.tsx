@@ -110,8 +110,6 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
             }}
             title="Open Zelebrae Combo Menu in Google Drive"
           >
-            <ExternalLink size={15} />
-            <span>View full combo menu</span>
           </a>
         </div>
 
