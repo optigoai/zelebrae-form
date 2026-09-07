@@ -7,24 +7,24 @@ interface HeaderProps {
   onOpenManageBookings?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ 
-  onRestart, 
+export const Header: React.FC<HeaderProps> = ({
+  onRestart,
   whatsappNumber = '918585855859',
   onOpenManageBookings
 }) => {
   return (
     <header className="site-header">
       <div className="header-inner">
-        <div 
-          className="header-brand" 
+        <div
+          className="header-brand"
           onClick={onRestart}
           style={{ cursor: onRestart ? 'pointer' : 'default' }}
           title="Zelebrae Pastries"
         >
-          <img 
-            src="/logo.png" 
-            alt="Zelebrae Pastries & Cafe" 
-            className="brand-logo-img" 
+          <img
+            src="/logo.png"
+            alt="Zelebrae Pastries & Cafe"
+            className="brand-logo-img"
           />
           <div className="brand-info">
             <span className="brand-title">Zelebrae</span>
@@ -41,14 +41,14 @@ export const Header: React.FC<HeaderProps> = ({
               title="Look up and manage your celebration bookings"
               aria-label="Check Booking"
             >
-              <CalendarCheck size={14} />
-              <span>Check Booking</span>
+              <CalendarCheck size={15} strokeWidth={2.2} />
+              <span>Cancel Booking</span>
             </button>
           )}
 
-          <a 
-            href={`https://wa.me/${whatsappNumber}?text=Hi%20Zelebrae%2C%20I%20have%20an%20inquiry%20regarding%20the%20Celebration%20Point.`} 
-            target="_blank" 
+          <a
+            href={`https://wa.me/${whatsappNumber}?text=Hi%20Zelebrae%2C%20I%20have%20an%20inquiry%20regarding%20the%20Celebration%20Point.`}
+            target="_blank"
             rel="noopener noreferrer"
             className="btn btn-ghost"
             style={{ padding: '0.4rem', borderRadius: '50%' }}
