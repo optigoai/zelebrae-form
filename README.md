@@ -12,10 +12,10 @@ Replaces long Google Forms with a progressive, delightful celebration booking ex
 - **Google Sheets as Database**: Bookings, available time slots, celebration locations, party combos, and amenities are stored directly in Google Sheets.
 - **Google Apps Script Web App**: Acts as the secure, lightweight data-access and booking layer with **zero secrets** exposed to client browsers.
 - **Double-Booking Protection**: Utilizes Google Apps Script `LockService` to atomically verify slot availability and write bookings, eliminating simultaneous race conditions.
-- **Zelebrae Visual Identity**:
-  - Deep Purple (`#4A1E5F`)
-  - Warm Celebration Cream Backgrounds (`#FAF8F5`, `#F5EFE6`)
-  - Vibrant Emerald Green CTA elements (`#1B8755`)
+- **Zelebrae Visual Identity (Official Brand Guidelines)**:
+  - Primary Brand Colour: Deep Royal Purple (`#592F7C`, PANTONE 94-14)
+  - Logo Accent Colour: Soft Rose (`#DE8FA3`, PANTONE P 71-12)
+  - Pastel Palette: Soft Pink (`#FCDEE2`), Peach (`#F5D8BC`), Lilac (`#E9DCED`), Mist Gray (`#E8E8E8`)
   - Elegant Typography: *Playfair Display* for headlines & *Plus Jakarta Sans* for crisp UI controls.
   - Authentic imagery: Integrated Zelebrae Celebration Point photograph (`hero.webp`) and official guidelines poster (`Guidelines.jpg`).
 - **Mobile-First UX**: Large touch targets (48px+), sticky bottom navigation bar, single primary CTA, responsive calendar, and one-handed slot selection.
@@ -97,7 +97,7 @@ Follow these simple steps to connect the booking application to your live Google
      4. `Zelebrae Bookings - Arakkinar`
    - In your Master spreadsheet, an **`All Bookings`** tab is created which automatically captures **every single booking across all 4 locations** in real time!
    - A **`Branch Links`** tab is also created listing each branch's exact Google Sheet URL!
-   - Each sheet is styled with brand-purple headers (`#4A1E5F`).
+   - Each sheet is styled with brand-purple headers (`#592F7C`).
 
 > **🔒 Complete Branch Privacy + Central Owner Dashboard**:
 > - **Branch Staff**: Each branch receives their own link and can only see their own branch's bookings.

@@ -43,7 +43,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
       <div className="location-selection-section">
         <div className="location-section-header">
           <h3 style={{ fontSize: '1.05rem', color: 'var(--color-brand-purple)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
-            <MapPin size={17} color="#4A1E5F" />
+            <MapPin size={17} color="#592F7C" />
             Select Celebration Location
           </h3>
         </div>
@@ -95,7 +95,7 @@ export const StepLocation: React.FC<StepLocationProps> = ({
         {selectedLocation && (
           <div className="selected-location-details animate-fade-in">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <MapPin size={18} color="#4A1E5F" style={{ flexShrink: 0 }} />
+              <MapPin size={18} color="#592F7C" style={{ flexShrink: 0 }} />
               <div>
                 <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--color-brand-purple)' }}>
                   {selectedLocation.name.replace(' Celebration Point', '')}

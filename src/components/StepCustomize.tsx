@@ -88,7 +88,7 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
         <div className="section-block-title">
           <div>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Gift size={20} color="#4A1E5F" />
+              <Gift size={20} color="#592F7C" />
               Party Accessories & Combos
             </h3>
           </div>
@@ -217,7 +217,7 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
                   <div className="combo-items-pills">
                     {combo.includes.map((item, idx) => (
                       <span key={idx} className="combo-item-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <Check size={12} strokeWidth={2.5} color="#1B8755" />
+                        <Check size={12} strokeWidth={2.5} color="#592F7C" />
                         <span>{item}</span>
                       </span>
                     ))}

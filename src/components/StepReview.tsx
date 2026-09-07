@@ -103,11 +103,11 @@ export const StepReview: React.FC<StepReviewProps> = ({
               <span className="review-label">Date & Time Slot</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.2rem' }}>
                 <span className="review-value" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Calendar size={15} color="#4A1E5F" />
+                  <Calendar size={15} color="#592F7C" />
                   {formatCelebrationDate(state.date)}
                 </span>
-                <span className="review-value" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#1B8755' }}>
-                  <Clock size={15} color="#1B8755" />
+                <span className="review-value" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#592F7C' }}>
+                  <Clock size={15} color="#592F7C" />
                   {formatTimeSlotRange(state.timeSlot)}
                 </span>
                 <span className="review-subtext" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.15rem' }}>
@@ -174,11 +174,11 @@ export const StepReview: React.FC<StepReviewProps> = ({
               <span className="review-label">Customer Contact</span>
               <div style={{ marginTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                 <span className="review-value" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <User size={14} color="#4A1E5F" />
+                  <User size={14} color="#592F7C" />
                   {state.name}
                 </span>
                 <span className="review-subtext" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Phone size={13} color="#1B8755" />
+                  <Phone size={13} color="#592F7C" />
                   {state.countryCode} {state.whatsapp}
                 </span>
                 {state.additionalRequirements && (
@@ -204,7 +204,7 @@ export const StepReview: React.FC<StepReviewProps> = ({
       <div className="guidelines-agreement-card">
         <div className="guidelines-prompt-row">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FileText size={18} color="#4A1E5F" />
+            <FileText size={18} color="#592F7C" />
             <span style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--color-brand-purple)' }}>
               Celebration Area Guidelines
             </span>

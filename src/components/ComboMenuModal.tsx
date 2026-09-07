@@ -66,7 +66,7 @@ export const ComboMenuModal: React.FC<ComboMenuModalProps> = ({
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.85rem' }}>
                   {combo.includes.map((item, i) => (
                     <span key={i} className="combo-item-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <Check size={12} strokeWidth={2.5} color="#1B8755" />
+                      <Check size={12} strokeWidth={2.5} color="#592F7C" />
                       <span>{item}</span>
                     </span>
                   ))}

@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ onRestart, locationName }) => {
             title="Chat on WhatsApp"
             aria-label="Chat on WhatsApp"
           >
-            <MessageCircle size={20} color="#1B8755" />
+            <MessageCircle size={20} color="#25D366" />
           </a>
         </div>
       </div>

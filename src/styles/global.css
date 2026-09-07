@@ -20,7 +20,8 @@ html {
 body {
   min-height: 100vh;
   min-height: 100dvh;
-  background-color: var(--color-bg-main);
+  background: linear-gradient(180deg, #FCDEE2 0%, #FDF8F9 160px, #FDF8F9 100%);
+  background-attachment: fixed;
   line-height: 1.5;
   overflow-x: hidden;
 }
@@ -31,7 +32,7 @@ body {
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
-  background-color: var(--color-bg-main);
+  background: transparent;
 }
 
 .main-content {
@@ -82,7 +83,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   outline-offset: 2px;
 }
 
-/* Reusable Badges */
+/* Reusable Badges (Brand Guidelines: PANTONE 94-14, P 71-12, P 71-1, P 24-10, P 88-1) */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -96,18 +97,18 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 
 .badge-purple {
-  background-color: var(--color-brand-purple-soft);
+  background-color: var(--color-pastel-lilac);
   color: var(--color-brand-purple);
 }
 
-.badge-green {
-  background-color: var(--color-cta-green-soft);
-  color: var(--color-cta-green);
+.badge-green, .badge-rose {
+  background-color: var(--color-pastel-pink);
+  color: var(--color-brand-purple);
 }
 
-.badge-gold {
-  background-color: var(--color-accent-amber-soft);
-  color: var(--color-accent-gold);
+.badge-gold, .badge-peach {
+  background-color: var(--color-pastel-peach);
+  color: #7A4B20;
 }
 
 /* Core Buttons */
@@ -134,19 +135,19 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 
 .btn-cta {
-  background-color: var(--color-cta-green);
+  background: linear-gradient(135deg, var(--color-brand-purple), var(--color-brand-purple-light));
   color: var(--color-text-inverse);
   box-shadow: var(--shadow-cta);
 }
 
 .btn-cta:hover:not(:disabled) {
-  background-color: var(--color-cta-green-hover);
-  box-shadow: 0 8px 24px rgba(27, 135, 85, 0.42);
+  background: linear-gradient(135deg, var(--color-brand-purple-dark), var(--color-brand-purple));
+  box-shadow: 0 8px 24px rgba(89, 47, 124, 0.42);
   transform: translateY(-1px);
 }
 
 .btn-cta:disabled {
-  background-color: #A7CBB6;
+  background: #C8B9D0;
   box-shadow: none;
   cursor: not-allowed;
   opacity: 0.7;

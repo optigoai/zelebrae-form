@@ -279,12 +279,12 @@ export const StepDateTime: React.FC<StepDateTimeProps> = ({
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--color-text-muted)', paddingTop: '0.75rem', borderTop: '1px dashed var(--color-border-subtle)', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Clock size={14} color="#1B8755" />
+                <Clock size={14} color="#592F7C" />
                 <span>1-hour private slot per pre-order</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#1B8755' }}></span>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#592F7C' }}></span>
                   Available
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>

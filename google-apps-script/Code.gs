@@ -216,7 +216,7 @@ function getBookingTargetSheet(ss, location) {
     sheet.appendRow(BOOKING_HEADERS);
     sheet.getRange(1, 1, 1, BOOKING_HEADERS.length)
       .setFontWeight("bold")
-      .setBackground("#4A1E5F")
+      .setBackground("#592F7C")
       .setFontColor("#FFFFFF");
   }
   return sheet;
@@ -388,7 +388,7 @@ function doPost(e) {
         masterAllSheet.appendRow(BOOKING_HEADERS);
         masterAllSheet.getRange(1, 1, 1, BOOKING_HEADERS.length)
           .setFontWeight("bold")
-          .setBackground("#4A1E5F")
+          .setBackground("#592F7C")
           .setFontColor("#FFFFFF");
       }
 
@@ -409,7 +409,7 @@ function doPost(e) {
           masterLocTab.appendRow(BOOKING_HEADERS);
           masterLocTab.getRange(1, 1, 1, BOOKING_HEADERS.length)
             .setFontWeight("bold")
-            .setBackground("#4A1E5F")
+            .setBackground("#592F7C")
             .setFontColor("#FFFFFF");
         }
         masterLocTab.appendRow(bookingRow);
@@ -686,7 +686,7 @@ function setupSeparateBranchSpreadsheets() {
     }
     sheet.getRange(1, 1, 1, BOOKING_HEADERS.length)
       .setFontWeight("bold")
-      .setBackground("#4A1E5F")
+      .setBackground("#592F7C")
       .setFontColor("#FFFFFF");
 
     createdSheets.push({
@@ -707,7 +707,7 @@ function setupSeparateBranchSpreadsheets() {
       }
       linkSheet.clear();
       linkSheet.appendRow(["Branch Name", "Location Code", "Dedicated Spreadsheet Link", "Spreadsheet ID"]);
-      linkSheet.getRange(1, 1, 1, 4).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
+      linkSheet.getRange(1, 1, 1, 4).setFontWeight("bold").setBackground("#592F7C").setFontColor("#FFFFFF");
 
       createdSheets.forEach(s => {
         linkSheet.appendRow([
@@ -759,7 +759,7 @@ function setupInitialSheets() {
     }
     allBookingsSheet.getRange(1, 1, 1, BOOKING_HEADERS.length)
       .setFontWeight("bold")
-      .setBackground("#4A1E5F")
+      .setBackground("#592F7C")
       .setFontColor("#FFFFFF");
   }
 
@@ -807,7 +807,7 @@ function setupInitialSheets() {
     15, 
     true
   ]);
-  locSheet.getRange(1, 1, 1, 6).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
+  locSheet.getRange(1, 1, 1, 6).setFontWeight("bold").setBackground("#592F7C").setFontColor("#FFFFFF");
 
   // 4. Sheet: Slots (Config)
   let slotsSheet = masterSS.getSheetByName("Slots");
@@ -824,7 +824,7 @@ function setupInitialSheets() {
   times.forEach(t => {
     slotsSheet.appendRow(["ALL", "ALL", t, true]);
   });
-  slotsSheet.getRange(1, 1, 1, 4).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
+  slotsSheet.getRange(1, 1, 1, 4).setFontWeight("bold").setBackground("#592F7C").setFontColor("#FFFFFF");
 
   // 5. Sheet: Combos (Config)
   let comboSheet = masterSS.getSheetByName("Combos");
@@ -838,7 +838,7 @@ function setupInitialSheets() {
   comboSheet.appendRow(["bride_to_be_combo", "Bride to Be Combo", "Sash, Veil, Badges, Party Props (BC1-BC9)", 480, true]);
   comboSheet.appendRow(["mom_to_be_combo", "Mom to Be Combo", "Sash, Floral Tiara, Balloon Cluster (MC1-MC6)", 730, true]);
   comboSheet.appendRow(["groom_to_be_combo", "Groom to be Combo", "Sash, Badges, Party Poppers (GC1-GC8)", 455, true]);
-  comboSheet.getRange(1, 1, 1, 5).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
+  comboSheet.getRange(1, 1, 1, 5).setFontWeight("bold").setBackground("#592F7C").setFontColor("#FFFFFF");
 
   // 6. Sheet: Amenities (Config)
   let amenSheet = masterSS.getSheetByName("Amenities");
@@ -851,7 +851,7 @@ function setupInitialSheets() {
   amenSheet.appendRow(["music_mic", "Background Music & Mic", "Bluetooth speaker & wireless mic", 0, true, true]);
   amenSheet.appendRow(["ac_hall", "AC Hall", "Air-conditioned private seating area", 0, true, true]);
   amenSheet.appendRow(["welcome_drink", "Welcome Drink", "Complimentary signature welcome drink", 0, true, true]);
-  amenSheet.getRange(1, 1, 1, 6).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
+  amenSheet.getRange(1, 1, 1, 6).setFontWeight("bold").setBackground("#592F7C").setFontColor("#FFFFFF");
 
   // 7. Sheet: Settings (Config)
   let settingsSheet = masterSS.getSheetByName("Settings");
@@ -864,7 +864,7 @@ function setupInitialSheets() {
   settingsSheet.appendRow(["max_guests", 15]);
   settingsSheet.appendRow(["min_guests", 1]);
   settingsSheet.appendRow(["booking_window_days", 45]);
-  settingsSheet.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#4A1E5F").setFontColor("#FFFFFF");
+  settingsSheet.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#592F7C").setFontColor("#FFFFFF");
 
   Logger.log("✅ Master Sheet ('All Bookings' + Config) and 4 branch spreadsheets successfully initialized!");
 }

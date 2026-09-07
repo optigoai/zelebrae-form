@@ -35,7 +35,7 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#4A1E5F', '#1B8755', '#D97706', '#E11D48', '#8B5CF6']
+        colors: ['#592F7C', '#DE8FA3', '#FCDEE2', '#F5D8BC', '#E9DCED']
       });
     } catch (e) {
       // Confetti fallback
@@ -127,7 +127,7 @@ ${state.additionalRequirements ? `Notes: ${state.additionalRequirements}` : ''}`
           title="Copy Booking ID"
           aria-label="Copy Booking ID"
         >
-          {copied ? <Check size={16} color="#1B8755" /> : <Copy size={16} />}
+          {copied ? <Check size={16} color="#592F7C" /> : <Copy size={16} />}
         </button>
       </div>
 

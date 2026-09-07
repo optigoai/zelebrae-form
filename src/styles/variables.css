@@ -1,58 +1,91 @@
 :root {
-  /* Zelebrae Brand Palette */
-  --color-brand-purple: #4A1E5F;
-  --color-brand-purple-dark: #320F43;
-  --color-brand-purple-light: #6A3285;
-  --color-brand-purple-soft: #F4EEF7;
-  --color-brand-purple-glow: rgba(74, 30, 95, 0.12);
+  /* ==========================================================================
+     Zelebrae Official Brand Color System
+     Source: Zelebrae Brand Guidelines (PANTONE 94-14, P 71-12, P 71-1, P 24-10, P 88-1, P 179-2)
+     ========================================================================== */
 
-  /* Primary CTA (Vibrant Green for high conversion & friendliness) */
-  --color-cta-green: #1B8755;
-  --color-cta-green-hover: #146C43;
-  --color-cta-green-active: #0F5132;
-  --color-cta-green-soft: #E8F5E9;
-  --color-cta-green-glow: rgba(27, 135, 85, 0.25);
+  /* 1. Primary Brand Colour (PANTONE 94-14 / CMYK 80, 98, 17, 5) */
+  --color-brand-purple: #592F7C;
+  --color-brand-purple-dark: #43215F;
+  --color-brand-purple-light: #734199;
+  --color-brand-purple-soft: #E9DCED; /* PANTONE P 88-1 Pastel Lilac */
+  --color-brand-purple-glow: rgba(89, 47, 124, 0.16);
 
-  /* Warm Celebration Backgrounds */
-  --color-bg-main: #FAF8F5;
+  /* 2. Logo Accent / Secondary Colour (PANTONE P 71-12) */
+  --color-brand-rose: #DE8FA3;
+  --color-brand-rose-dark: #C67288;
+  --color-brand-rose-soft: #FCDEE2; /* PANTONE P 71-1 Pastel Pink */
+  --color-brand-rose-glow: rgba(222, 143, 163, 0.28);
+
+  /* 3. Official Pastel Palette */
+  --color-pastel-pink: #FCDEE2;   /* PANTONE P 71-1 */
+  --color-pastel-peach: #F5D8BC;  /* PANTONE P 24-10 */
+  --color-pastel-lilac: #E9DCED;  /* PANTONE P 88-1 */
+  --color-pastel-gray: #E8E8E8;   /* PANTONE P 179-2 */
+
+  /* Soft pastel ambient background tints */
+  --color-pastel-pink-soft: #FDF1F3;
+  --color-pastel-peach-soft: #FBF4ED;
+  --color-pastel-lilac-soft: #F6F0F8;
+
+  /* 4. Primary CTA & Action (Deep Zelebrae Purple with rich elevation) */
+  --color-cta: #592F7C;
+  --color-cta-hover: #43215F;
+  --color-cta-active: #35174D;
+  --color-cta-soft: #E9DCED;
+  --color-cta-glow: rgba(89, 47, 124, 0.32);
+
+  /* Backward-compatible CTA Green aliases remapped to Brand Palette */
+  --color-cta-green: #592F7C;
+  --color-cta-green-hover: #43215F;
+  --color-cta-green-active: #35174D;
+  --color-cta-green-soft: #E9DCED;
+  --color-cta-green-glow: rgba(89, 47, 124, 0.25);
+
+  /* WhatsApp specific color */
+  --color-whatsapp: #25D366;
+  --color-whatsapp-dark: #128C7E;
+
+  /* 5. Surface & Background System (Soft Pastel Ambient Canvas) */
+  --color-bg-main: #FDF8F9;
   --color-bg-surface: #FFFFFF;
-  --color-bg-subtle: #F5EFE6;
+  --color-bg-subtle: #FCDEE2;
   --color-bg-card: #FFFFFF;
-  --color-bg-highlight: #FFFDF9;
+  --color-bg-highlight: #FFF5F7;
 
-  /* Typography Colors */
-  --color-text-primary: #1C1917;
-  --color-text-secondary: #4A1E5F;
-  --color-text-muted: #6B7280;
-  --color-text-tertiary: #9CA3AF;
+  /* 6. Typography */
+  --color-text-primary: #211A29;
+  --color-text-secondary: #592F7C;
+  --color-text-muted: #6C6375;
+  --color-text-tertiary: #9E96A6;
   --color-text-inverse: #FFFFFF;
 
-  /* Accents & Status */
-  --color-accent-gold: #D97706;
-  --color-accent-amber-soft: #FEF3C7;
-  --color-accent-rose: #E11D48;
-  --color-accent-rose-soft: #FFE4E6;
+  /* 7. Accents & Feedback */
+  --color-accent-gold: #D48B38;
+  --color-accent-amber-soft: #FBF4ED;
+  --color-accent-rose: #DE8FA3;
+  --color-accent-rose-soft: #FCDEE2;
   --color-status-error: #DC2626;
   --color-status-error-bg: #FEF2F2;
-  --color-status-success: #16A34A;
-  --color-status-booked: #9CA3AF;
+  --color-status-success: #592F7C;
+  --color-status-booked: #9E96A6;
 
-  /* Borders & Dividers */
-  --color-border-subtle: #EBE5DC;
-  --color-border-card: #E5DFD5;
-  --color-border-active: #4A1E5F;
-  --color-border-green: #1B8755;
+  /* 8. Borders & Dividers */
+  --color-border-subtle: #E8E8E8;
+  --color-border-card: #E8E8E8;
+  --color-border-active: #592F7C;
+  --color-border-green: #592F7C;
 
-  /* Typography */
+  /* Typography Fonts */
   --font-heading: 'Playfair Display', Georgia, serif;
   --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 
-  /* Elevation Shadows */
-  --shadow-xs: 0 1px 2px rgba(74, 30, 95, 0.04);
-  --shadow-sm: 0 2px 8px rgba(74, 30, 95, 0.06);
-  --shadow-md: 0 8px 24px -4px rgba(74, 30, 95, 0.08);
-  --shadow-lg: 0 16px 36px -6px rgba(74, 30, 95, 0.12);
-  --shadow-cta: 0 6px 20px rgba(27, 135, 85, 0.35);
+  /* Elevation Shadows tuned for brand purple */
+  --shadow-xs: 0 1px 2px rgba(89, 47, 124, 0.04);
+  --shadow-sm: 0 2px 8px rgba(89, 47, 124, 0.07);
+  --shadow-md: 0 8px 24px -4px rgba(89, 47, 124, 0.10);
+  --shadow-lg: 0 16px 36px -6px rgba(89, 47, 124, 0.15);
+  --shadow-cta: 0 6px 20px rgba(89, 47, 124, 0.35);
 
   /* Border Radii */
   --radius-sm: 8px;

@@ -40,7 +40,7 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
         <div className="input-group">
           <label htmlFor="fullNameInput" className="input-label">
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <User size={15} color="#4A1E5F" />
+              <User size={15} color="#592F7C" />
               Full Name <span className="required-star">*</span>
             </span>
           </label>
@@ -60,7 +60,7 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
         <div className="input-group">
           <label htmlFor="customerLocationInput" className="input-label">
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <MapPin size={15} color="#4A1E5F" />
+              <MapPin size={15} color="#592F7C" />
               Your City / Area <span className="required-star">*</span>
             </span>
           </label>
@@ -82,10 +82,10 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
         <div className="input-group">
           <label htmlFor="whatsappInput" className="input-label">
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Phone size={15} color="#4A1E5F" />
+              <Phone size={15} color="#592F7C" />
               WhatsApp Number <span className="required-star">*</span>
             </span>
-            <span style={{ fontSize: '0.72rem', color: '#1B8755', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--color-brand-rose)', fontWeight: 600 }}>
               Confirmation sent here
             </span>
           </label>
@@ -124,7 +124,7 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
         <div className="input-group">
           <label htmlFor="emailInput" className="input-label">
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Mail size={15} color="#4A1E5F" />
+              <Mail size={15} color="#592F7C" />
               Email Address
             </span>
             <span className="optional-tag">Optional</span>
@@ -145,7 +145,7 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
         <div className="input-group">
           <label htmlFor="requirementsInput" className="input-label">
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <MessageSquare size={15} color="#4A1E5F" />
+              <MessageSquare size={15} color="#592F7C" />
               Additional Celebration Notes
             </span>
             <span className="optional-tag">Optional</span>
