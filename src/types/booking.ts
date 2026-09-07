@@ -97,7 +97,7 @@ export interface AppConfig {
   combos: ComboItem[];
   maxGuests: number;
   minGuests: number;
-  whatsappNumber: string; // e.g. "919072333600"
+  whatsappNumber: string; // e.g. "918585855859"
   bookingWindowDays: number;
   menuPdfUrl?: string;
 }

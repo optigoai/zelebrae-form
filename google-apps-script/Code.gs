@@ -623,7 +623,7 @@ function isSlotAlreadyBooked(ss, location, date, timeSlot) {
  */
 function getAppConfiguration(ss) {
   return {
-    whatsappNumber: "919072333600",
+    whatsappNumber: "918585855859",
     maxGuests: 15,
     minGuests: 1
   };
@@ -860,7 +860,7 @@ function setupInitialSheets() {
   }
   settingsSheet.clear();
   settingsSheet.appendRow(["key", "value"]);
-  settingsSheet.appendRow(["whatsapp_number", "919072333600"]);
+  settingsSheet.appendRow(["whatsapp_number", "918585855859"]);
   settingsSheet.appendRow(["max_guests", 15]);
   settingsSheet.appendRow(["min_guests", 1]);
   settingsSheet.appendRow(["booking_window_days", 45]);

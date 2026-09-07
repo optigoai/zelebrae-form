@@ -24,7 +24,7 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   state,
   locations,
   onReset,
-  businessWhatsApp = '919072333600'
+  businessWhatsApp = '918585855859'
 }) => {
   const [copied, setCopied] = React.useState(false);
 

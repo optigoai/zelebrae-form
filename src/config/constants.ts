@@ -271,7 +271,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   combos: DEFAULT_COMBOS,
   maxGuests: 15,
   minGuests: 1,
-  whatsappNumber: '919072333600',
+  whatsappNumber: '918585855859',
   bookingWindowDays: 45,
   menuPdfUrl: 'https://drive.google.com/file/d/1utY7FdUORh4c7TjVr1a4vAy8Qhg6eY3l/view?usp=drivesdk'
 };

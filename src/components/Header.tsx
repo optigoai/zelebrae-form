@@ -4,9 +4,14 @@ import { MapPin, MessageCircle } from 'lucide-react';
 interface HeaderProps {
   onRestart?: () => void;
   locationName?: string;
+  whatsappNumber?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onRestart, locationName }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  onRestart, 
+  locationName, 
+  whatsappNumber = '918585855859' 
+}) => {
   return (
     <header className="site-header">
       <div className="header-inner">
@@ -36,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ onRestart, locationName }) => {
           )}
 
           <a 
-            href="https://wa.me/919072333600?text=Hi%20Zelebrae%2C%20I%20have%20an%20inquiry%20regarding%20the%20Celebration%20Point." 
+            href={`https://wa.me/${whatsappNumber}?text=Hi%20Zelebrae%2C%20I%20have%20an%20inquiry%20regarding%20the%20Celebration%20Point.`} 
             target="_blank" 
             rel="noopener noreferrer"
             className="btn btn-ghost"

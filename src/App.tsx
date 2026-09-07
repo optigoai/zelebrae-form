@@ -295,6 +295,7 @@ export const App: React.FC = () => {
       <Header 
         onRestart={confirmedBookingId ? handleReset : undefined} 
         locationName={currentLocation?.name}
+        whatsappNumber={config.whatsappNumber}
       />
 
       <main className="main-content">

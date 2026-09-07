@@ -107,7 +107,7 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
               id="whatsappInput"
               type="tel"
               className={`input-field ${errors.whatsapp ? 'error' : ''}`}
-              placeholder="98765 43210"
+              placeholder="85858 55859"
               value={whatsapp}
               onChange={(e) => {
                 // Allow digits and spaces
