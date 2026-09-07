@@ -8,6 +8,7 @@ import { StepCustomize } from './components/StepCustomize';
 import { StepCustomerDetails } from './components/StepCustomerDetails';
 import { StepReview } from './components/StepReview';
 import { SuccessScreen } from './components/SuccessScreen';
+import { ManageBookingsModal } from './components/ManageBookingsModal';
 import { MobileBottomBar } from './components/MobileBottomBar';
 import { bookingApi } from './services/bookingApi';
 import { AppConfig, BookingState } from './types/booking';
@@ -30,6 +31,7 @@ export const App: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [confirmedBookingId, setConfirmedBookingId] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [isManageModalOpen, setIsManageModalOpen] = useState<boolean>(false);
 
   // Form validation errors for Step 5
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -288,14 +290,12 @@ export const App: React.FC = () => {
   // Compute if Next button is disabled for current step (Step 5 remains clickable to show validation errors)
   const isNextDisabled = currentStep === 5 ? false : !isStepComplete(currentStep);
 
-  const currentLocation = config.locations.find(l => l.id === bookingState.location);
-
   return (
     <div className="app-container">
       <Header 
         onRestart={confirmedBookingId ? handleReset : undefined} 
-        locationName={currentLocation?.name}
         whatsappNumber={config.whatsappNumber}
+        onOpenManageBookings={() => setIsManageModalOpen(true)}
       />
 
       <main className="main-content">
@@ -437,6 +437,12 @@ export const App: React.FC = () => {
           isSubmitting={isSubmitting}
         />
       )}
+
+      {/* Self-Service Manage / Cancel Bookings Modal */}
+      <ManageBookingsModal
+        isOpen={isManageModalOpen}
+        onClose={() => setIsManageModalOpen(false)}
+      />
     </div>
   );
 };

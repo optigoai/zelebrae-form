@@ -13,17 +13,44 @@ export const GuidelinesModal: React.FC<GuidelinesModalProps> = ({
   onClose,
   onAgreeAndClose
 }) => {
+  // Prevent background scrolling while modal is open
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    document.body.classList.add('modal-open');
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      document.body.classList.remove('modal-open');
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <div 
       className="modal-overlay" 
       onClick={onClose} 
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
       role="dialog" 
       aria-modal="true" 
       aria-labelledby="guidelines-modal-title"
     >
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className="modal-content" 
+        onClick={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <ShieldAlert size={22} color="#FDE68A" />

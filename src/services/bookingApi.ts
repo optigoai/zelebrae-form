@@ -1,4 +1,4 @@
-import { AppConfig, BookingApiResponse, BookingState, AvailabilityResponse } from '../types/booking';
+import { AppConfig, BookingApiResponse, BookingState, AvailabilityResponse, ManageableBooking } from '../types/booking';
 import { DEFAULT_APP_CONFIG, STANDARD_TIME_SLOTS } from '../config/constants';
 import { getKolkataToday, normalizeSlotTime } from '../utils/dateUtils';
 
@@ -266,6 +266,112 @@ export const bookingApi = {
     } catch (err: any) {
       console.error('Submit booking error:', err);
       throw new Error(err.message || 'Something went wrong while confirming your booking. Please check your connection and try again.');
+    }
+  },
+
+  /**
+   * Fetch all bookings associated with a specific mobile number
+   */
+  async fetchBookingsByPhone(phone: string): Promise<ManageableBooking[]> {
+    const cleanPhone = (phone || '').replace(/\D/g, '');
+    const phoneSuffix = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
+
+    if (!cleanPhone || cleanPhone.length < 5) {
+      throw new Error('Please enter a valid mobile number.');
+    }
+
+    if (!API_ENDPOINT) {
+      // Fallback: Read from local mock session store
+      await new Promise(r => setTimeout(r, 450));
+      const mockList = getStoredMockBookings();
+      const matched = mockList.filter(b => {
+        const itemPhone = (b.whatsapp || '').replace(/\D/g, '');
+        return itemPhone.includes(phoneSuffix) || cleanPhone.includes(itemPhone.slice(-10));
+      });
+
+      return matched.map(m => ({
+        bookingId: m.id,
+        createdAt: new Date().toISOString(),
+        location: m.location,
+        date: m.date,
+        timeSlot: m.timeSlot,
+        name: m.name,
+        whatsapp: m.whatsapp,
+        occasion: 'Birthday',
+        guests: 4,
+        status: m.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED'
+      }));
+    }
+
+    try {
+      const url = `${API_ENDPOINT}?action=getBookingsByPhone&phone=${encodeURIComponent(cleanPhone)}&_t=${Date.now()}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch bookings');
+      }
+      return data.bookings || [];
+    } catch (err: any) {
+      console.error('Fetch bookings by phone error:', err);
+      throw new Error(err.message || 'Could not retrieve bookings. Please check your internet connection.');
+    }
+  },
+
+  /**
+   * Cancel an active booking
+   */
+  async cancelBooking(bookingId: string, phone: string): Promise<{ success: boolean; message: string; bookingId?: string }> {
+    const cleanPhone = (phone || '').replace(/\D/g, '');
+
+    if (!bookingId || !cleanPhone) {
+      throw new Error('Booking ID and mobile number are required to cancel.');
+    }
+
+    if (!API_ENDPOINT) {
+      // Fallback: Update mock session store
+      await new Promise(r => setTimeout(r, 500));
+      const mockList = getStoredMockBookings();
+      const updated = mockList.map(b => {
+        if (b.id === bookingId) {
+          return { ...b, status: 'cancelled' as const };
+        }
+        return b;
+      });
+      sessionStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(updated));
+
+      return {
+        success: true,
+        bookingId,
+        message: 'Your celebration booking has been successfully cancelled. The slot has been released.'
+      };
+    }
+
+    try {
+      const payload = {
+        action: 'cancelBooking',
+        bookingId,
+        phone: cleanPhone
+      };
+
+      const res = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.message || data.error || 'Cancellation could not be completed.');
+      }
+
+      return data;
+    } catch (err: any) {
+      console.error('Cancel booking error:', err);
+      throw new Error(err.message || 'Failed to cancel booking. Please contact Zelebrae directly on WhatsApp.');
     }
   }
 };

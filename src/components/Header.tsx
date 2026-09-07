@@ -1,16 +1,16 @@
 import React from 'react';
-import { MapPin, MessageCircle } from 'lucide-react';
+import { MessageCircle, CalendarCheck } from 'lucide-react';
 
 interface HeaderProps {
   onRestart?: () => void;
-  locationName?: string;
   whatsappNumber?: string;
+  onOpenManageBookings?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
   onRestart, 
-  locationName, 
-  whatsappNumber = '918585855859' 
+  whatsappNumber = '918585855859',
+  onOpenManageBookings
 }) => {
   return (
     <header className="site-header">
@@ -33,11 +33,17 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="header-actions">
-          {locationName && (
-            <span className="badge badge-purple" style={{ fontSize: '0.72rem' }}>
-              <MapPin size={11} />
-              {locationName.replace(' Celebration Point', '')}
-            </span>
+          {onOpenManageBookings && (
+            <button
+              type="button"
+              className="btn btn-manage-header"
+              onClick={onOpenManageBookings}
+              title="Look up and manage your celebration bookings"
+              aria-label="Check Booking"
+            >
+              <CalendarCheck size={14} />
+              <span>Check Booking</span>
+            </button>
           )}
 
           <a 

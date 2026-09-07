@@ -101,3 +101,21 @@ export interface AppConfig {
   bookingWindowDays: number;
   menuPdfUrl?: string;
 }
+
+export interface ManageableBooking {
+  bookingId: string;
+  createdAt?: string;
+  location: string;
+  date: string;
+  timeSlot: string;
+  name: string;
+  customerLocation?: string;
+  whatsapp: string;
+  email?: string;
+  occasion: string;
+  guests: number;
+  additionalRequirements?: string;
+  amenities?: string;
+  combo?: string;
+  status: 'CONFIRMED' | 'CANCELLED' | string;
+}

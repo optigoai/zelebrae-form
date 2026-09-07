@@ -258,6 +258,24 @@ function doGet(e) {
       });
     }
 
+    if (action === 'getBookingsByPhone') {
+      const rawPhone = (e.parameter.phone || '').toString().trim();
+      const cleanPhone = rawPhone.replace(/\D/g, '');
+      if (!cleanPhone || cleanPhone.length < 5) {
+        return jsonResponse({
+          success: false,
+          error: "Valid phone parameter is required"
+        });
+      }
+
+      const bookings = getBookingsForPhone(ss, cleanPhone);
+      return jsonResponse({
+        success: true,
+        phone: cleanPhone,
+        bookings: bookings
+      });
+    }
+
     return jsonResponse({
       success: false,
       error: "Invalid action parameter"
@@ -298,6 +316,11 @@ function doPost(e) {
     }
 
     const masterSS = getMasterSpreadsheet() || SpreadsheetApp.getActiveSpreadsheet();
+
+    // Check if this is a cancellation request
+    if (body.action === 'cancelBooking') {
+      return handleCancelBooking(body, masterSS);
+    }
 
     // 2. Extract and sanitize payload
     const rawLocation = (body.location || 'pantheerankavu').toLowerCase().trim();
@@ -867,4 +890,167 @@ function setupInitialSheets() {
   settingsSheet.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#592F7C").setFontColor("#FFFFFF");
 
   Logger.log("✅ Master Sheet ('All Bookings' + Config) and 4 branch spreadsheets successfully initialized!");
+}
+
+/**
+ * Retrieves all bookings matching a customer's phone number from Master & Branch spreadsheets
+ */
+function getBookingsForPhone(masterSS, searchPhone) {
+  const cleanSearch = (searchPhone || '').toString().replace(/\D/g, '');
+  const searchSuffix = cleanSearch.length >= 10 ? cleanSearch.slice(-10) : cleanSearch;
+  const results = [];
+  const seenIds = new Set();
+
+  if (!masterSS) return results;
+
+  // Sheets to search: Master "All Bookings", fallback "Bookings", or branch sheets
+  const sheetsToSearch = [];
+  const allSheet = masterSS.getSheetByName("All Bookings") || masterSS.getSheetByName("Bookings");
+  if (allSheet) {
+    sheetsToSearch.push(allSheet);
+  } else {
+    // If no All Bookings sheet, search each branch tab
+    for (const key in LOCATION_SHEET_MAP) {
+      const bSheet = masterSS.getSheetByName(LOCATION_SHEET_MAP[key]);
+      if (bSheet) sheetsToSearch.push(bSheet);
+    }
+  }
+
+  sheetsToSearch.forEach(sheet => {
+    const data = sheet.getDataRange().getValues();
+    // Iterate from newest (bottom) to oldest (top)
+    for (let i = data.length - 1; i >= 1; i--) {
+      const row = data[i];
+      const bId = (row[0] || '').toString().trim();
+      if (!bId || seenIds.has(bId)) continue;
+
+      const rowPhone = (row[7] || '').toString().replace(/\D/g, '');
+      const rowPhoneSuffix = rowPhone.length >= 10 ? rowPhone.slice(-10) : rowPhone;
+
+      if (rowPhoneSuffix && searchSuffix && (rowPhoneSuffix === searchSuffix || rowPhone.indexOf(searchSuffix) !== -1 || cleanSearch.indexOf(rowPhoneSuffix) !== -1)) {
+        seenIds.add(bId);
+
+        let rowDate = (row[3] || '').toString().trim();
+        if (row[3] instanceof Date) {
+          rowDate = Utilities.formatDate(row[3], TIMEZONE, "yyyy-MM-dd");
+        }
+
+        let createdAtStr = (row[1] || '').toString().trim();
+        if (row[1] instanceof Date) {
+          createdAtStr = Utilities.formatDate(row[1], TIMEZONE, "yyyy-MM-dd HH:mm");
+        }
+
+        results.push({
+          bookingId: bId,
+          createdAt: createdAtStr,
+          location: (row[2] || '').toString().trim(),
+          date: rowDate,
+          timeSlot: (row[4] || '').toString().trim(),
+          name: (row[5] || '').toString().trim(),
+          customerLocation: (row[6] || '').toString().trim(),
+          whatsapp: (row[7] || '').toString().trim().replace(/^'/, ''),
+          email: (row[8] || '').toString().trim(),
+          occasion: (row[9] || '').toString().trim(),
+          guests: parseInt(row[10], 10) || 1,
+          additionalRequirements: (row[11] || '').toString().trim(),
+          amenities: (row[12] || '').toString().trim(),
+          combo: (row[13] || '').toString().trim(),
+          status: (row[14] || 'CONFIRMED').toString().trim().toUpperCase()
+        });
+      }
+    }
+  });
+
+  return results;
+}
+
+/**
+ * Cancels a booking and updates status to CANCELLED in both Master & Branch spreadsheets
+ */
+function handleCancelBooking(body, masterSS) {
+  const bookingId = (body.bookingId || body.booking_id || '').toString().trim();
+  const rawPhone = (body.phone || body.whatsapp || '').toString().replace(/\D/g, '');
+  const searchPhone = rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
+
+  if (!bookingId || !searchPhone) {
+    return jsonResponse({
+      success: false,
+      error: "INVALID_PARAMS",
+      message: "Both Booking ID and registered Phone number are required."
+    });
+  }
+
+  let foundBooking = false;
+  let targetLocation = '';
+
+  // 1. Update in Master Spreadsheet
+  if (masterSS) {
+    const sheetsToCheck = [
+      masterSS.getSheetByName("All Bookings"),
+      masterSS.getSheetByName("Bookings")
+    ].filter(Boolean);
+
+    // Also include branch tabs in master if present
+    for (const key in LOCATION_SHEET_MAP) {
+      const s = masterSS.getSheetByName(LOCATION_SHEET_MAP[key]);
+      if (s && !sheetsToCheck.includes(s)) sheetsToCheck.push(s);
+    }
+
+    for (const sheet of sheetsToCheck) {
+      const data = sheet.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        const rowId = (data[i][0] || '').toString().trim();
+        if (rowId === bookingId) {
+          const rowPhone = (data[i][7] || '').toString().replace(/\D/g, '');
+          const rowSuffix = rowPhone.length >= 10 ? rowPhone.slice(-10) : rowPhone;
+          if (rowSuffix !== searchPhone && rowPhone.indexOf(searchPhone) === -1) {
+            return jsonResponse({
+              success: false,
+              error: "PHONE_MISMATCH",
+              message: "The phone number does not match the booking record."
+            });
+          }
+
+          targetLocation = (data[i][2] || '').toString().trim();
+          sheet.getRange(i + 1, 15).setValue("CANCELLED"); // Column O (status)
+          foundBooking = true;
+          break;
+        }
+      }
+      if (foundBooking) break;
+    }
+  }
+
+  // 2. Update in Dedicated Branch Spreadsheet (if separate)
+  if (targetLocation) {
+    const branchSS = getLocationSpreadsheet(targetLocation);
+    if (branchSS && (!masterSS || branchSS.getId() !== masterSS.getId())) {
+      const branchSheet = getBookingTargetSheet(branchSS, targetLocation);
+      if (branchSheet) {
+        const bData = branchSheet.getDataRange().getValues();
+        for (let i = 1; i < bData.length; i++) {
+          const rowId = (bData[i][0] || '').toString().trim();
+          if (rowId === bookingId) {
+            branchSheet.getRange(i + 1, 15).setValue("CANCELLED");
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  if (!foundBooking) {
+    return jsonResponse({
+      success: false,
+      error: "BOOKING_NOT_FOUND",
+      message: "Booking ID was not found or has already been removed."
+    });
+  }
+
+  return jsonResponse({
+    success: true,
+    bookingId: bookingId,
+    status: "CANCELLED",
+    message: "Your celebration booking has been successfully cancelled. The slot has been released."
+  });
 }
