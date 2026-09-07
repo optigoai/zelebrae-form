@@ -111,7 +111,6 @@ export const StepOccasionGuests: React.FC<StepOccasionGuestsProps> = ({
         <div className="guest-header">
           <div className="guest-title-wrap">
             <h4>How many guests?</h4>
-            <p>Private celebration space accommodates up to {maxGuests} guests.</p>
           </div>
           <span className="badge badge-purple">
             <Users size={12} />
@@ -154,8 +153,9 @@ export const StepOccasionGuests: React.FC<StepOccasionGuestsProps> = ({
               type="button"
               className={`preset-chip ${guests === preset ? 'active' : ''}`}
               onClick={() => onChangeGuests(preset)}
+              aria-label={`${preset} guests`}
             >
-              {preset} Guests
+              {preset}
             </button>
           ))}
         </div>

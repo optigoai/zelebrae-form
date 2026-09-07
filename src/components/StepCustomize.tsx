@@ -92,25 +92,6 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
               Party Accessories & Combos
             </h3>
           </div>
-
-          <a
-            href={driveUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-ghost"
-            style={{
-              fontSize: '0.82rem',
-              padding: '0.35rem 0.65rem',
-              color: 'var(--color-brand-purple)',
-              fontWeight: 700,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem'
-            }}
-            title="Open Zelebrae Combo Menu in Google Drive"
-          >
-          </a>
         </div>
 
         <div className="combos-list" role="radiogroup" aria-label="Party Combos">
