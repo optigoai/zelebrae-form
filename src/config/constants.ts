@@ -130,7 +130,7 @@ export const DEFAULT_COMBOS: ComboItem[] = [
     category: 'Standard',
     description: 'Complimentary private celebration space with standard amenities only',
     price: 0,
-    includes: ['Complimentary celebration nook', 'Standard cake pedestal & cutlery'],
+    includes: [],
     active: true
   },
   {
@@ -148,11 +148,7 @@ export const DEFAULT_COMBOS: ComboItem[] = [
       { code: 'MC5', price: 580, label: 'MC5 ₹580/-' },
       { code: 'MC6', price: 600, label: 'MC6 ₹600/-' }
     ],
-    includes: [
-      'Mom to Be Satin Sash & Tiara',
-      'Pastel Balloon Bundle & Props',
-      'Cake Table Accents'
-    ],
+    includes: [],
     active: true
   },
   {
@@ -173,11 +169,7 @@ export const DEFAULT_COMBOS: ComboItem[] = [
       { code: 'BC8', price: 850, label: 'BC8 ₹850/-' },
       { code: 'BC9', price: 920, label: 'BC9 ₹920/-' }
     ],
-    includes: [
-      'Bride to Be Satin Sash & Veil',
-      'Team Bride Badges & Photo Props',
-      'Sparkling Celebration Accents'
-    ],
+    includes: [],
     active: true
   },
   {
@@ -198,11 +190,7 @@ export const DEFAULT_COMBOS: ComboItem[] = [
       { code: 'DC7', price: 530, label: 'DC7 ₹530/-' },
       { code: 'DC8', price: 750, label: 'DC8 ₹750/-' }
     ],
-    includes: [
-      'Custom Birthday Sash & Tiara/Crown',
-      'Party Poppers & Sparkling Candle',
-      'Celebration Props Set'
-    ],
+    includes: [],
     active: true
   },
   {
@@ -219,11 +207,7 @@ export const DEFAULT_COMBOS: ComboItem[] = [
       { code: 'AC3', price: 460, label: 'AC3 ₹460/-' },
       { code: 'AC4', price: 440, label: 'AC4 ₹440/-' }
     ],
-    includes: [
-      'Fresh Rose Petal Table Spread',
-      'Anniversary Keepsake Frame',
-      'LED Romantic Fairy Lights'
-    ],
+    includes: [],
     active: true
   },
   {
@@ -243,11 +227,7 @@ export const DEFAULT_COMBOS: ComboItem[] = [
       { code: 'GC7', price: 655, label: 'GC7 ₹655/-' },
       { code: 'GC8', price: 1000, label: 'GC8 ₹1000/-' }
     ],
-    includes: [
-      'Groom to Be Sash & Badges',
-      'Bachelor Celebration Props',
-      'Party Poppers'
-    ],
+    includes: [],
     active: true
   }
 ];

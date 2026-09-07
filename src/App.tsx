@@ -70,7 +70,16 @@ export const App: React.FC = () => {
   };
 
   const handleSelectOccasion = (occId: string) => {
-    setBookingState(prev => ({ ...prev, occasion: occId }));
+    setBookingState(prev => {
+      if (prev.occasion === occId) return prev;
+      return {
+        ...prev,
+        occasion: occId,
+        combo: 'none',
+        comboPackage: undefined,
+        comboPrice: 0
+      };
+    });
   };
 
   const handleChangeCustomOccasion = (val: string) => {
@@ -374,6 +383,7 @@ export const App: React.FC = () => {
 
             {currentStep === 4 && (
               <StepCustomize
+                occasion={bookingState.occasion}
                 amenities={config.amenities}
                 selectedAmenities={bookingState.amenities}
                 onToggleAmenity={handleToggleAmenity}

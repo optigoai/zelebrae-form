@@ -6,6 +6,7 @@ import { AmenityIcon } from './CelebrationIcon';
 const COMBO_MENU_DRIVE_URL = 'https://drive.google.com/file/d/1utY7FdUORh4c7TjVr1a4vAy8Qhg6eY3l/view?usp=drivesdk';
 
 interface StepCustomizeProps {
+  occasion?: string;
   amenities: Amenity[];
   selectedAmenities: string[];
   onToggleAmenity: (id: string) => void;
@@ -18,7 +19,42 @@ interface StepCustomizeProps {
   menuPdfUrl?: string;
 }
 
+const getCombosForOccasion = (combos: ComboItem[], occasion?: string): ComboItem[] => {
+  if (!occasion || occasion === 'other') {
+    return combos;
+  }
+
+  return combos.filter(combo => {
+    // Always include "none" (No Add-on Combo)
+    if (combo.id === 'none') return true;
+
+    const normOcc = occasion.toLowerCase().trim();
+    const normId = combo.id.toLowerCase().trim();
+    const normCat = (combo.category || '').toLowerCase().trim();
+    const normName = (combo.name || '').toLowerCase().trim();
+
+    if (normOcc === 'birthday') {
+      return normId.includes('birthday') || normCat.includes('birthday') || normName.includes('birthday');
+    }
+    if (normOcc === 'anniversary') {
+      return normId.includes('anniversary') || normCat.includes('anniversary') || normName.includes('anniversary');
+    }
+    if (normOcc === 'bride_to_be') {
+      return normId.includes('bride') || normCat.includes('bride') || normName.includes('bride');
+    }
+    if (normOcc === 'groom_to_be') {
+      return normId.includes('groom') || normCat.includes('groom') || normName.includes('groom');
+    }
+    if (normOcc === 'mom_to_be') {
+      return normId.includes('mom') || normCat.includes('mom') || normName.includes('mom');
+    }
+
+    return true;
+  });
+};
+
 export const StepCustomize: React.FC<StepCustomizeProps> = ({
+  occasion,
   amenities,
   selectedAmenities,
   onToggleAmenity,
@@ -31,6 +67,17 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
   menuPdfUrl = COMBO_MENU_DRIVE_URL
 }) => {
   const driveUrl = menuPdfUrl || COMBO_MENU_DRIVE_URL;
+
+  const filteredCombos = React.useMemo(() => {
+    return getCombosForOccasion(combos, occasion);
+  }, [combos, occasion]);
+
+  // If the currently selected combo isn't in the filtered list, safely reset to 'none'
+  React.useEffect(() => {
+    if (selectedCombo !== 'none' && !filteredCombos.some(c => c.id === selectedCombo)) {
+      onSelectCombo('none', undefined, 0);
+    }
+  }, [filteredCombos, selectedCombo, onSelectCombo]);
 
   return (
     <div className="animate-fade-in customization-section">
@@ -95,7 +142,7 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
         </div>
 
         <div className="combos-list" role="radiogroup" aria-label="Party Combos">
-          {combos.map((combo) => {
+          {filteredCombos.map((combo) => {
             const isSelected = selectedCombo === combo.id;
             const currentPrice = isSelected && selectedPrice !== undefined ? selectedPrice : combo.price;
             const comboDriveUrl = combo.driveUrl || driveUrl;
