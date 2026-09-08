@@ -1012,6 +1012,33 @@ function handleCancelBooking(body, masterSS) {
           }
 
           targetLocation = (data[i][2] || '').toString().trim();
+
+          // Check if already cancelled
+          const currentStatus = (data[i][14] || '').toString().trim().toUpperCase();
+          if (currentStatus === 'CANCELLED') {
+            return jsonResponse({
+              success: false,
+              error: "ALREADY_CANCELLED",
+              message: "This celebration booking has already been cancelled."
+            });
+          }
+
+          // Check minimum 2-hour advance cutoff rule
+          let rowDate = (data[i][3] || '').toString().trim();
+          if (data[i][3] instanceof Date) {
+            rowDate = Utilities.formatDate(data[i][3], TIMEZONE, "yyyy-MM-dd");
+          }
+          const rowSlot = normalizeSlot(data[i][4]);
+          const cancelCheck = isCancellationPermitted(rowDate, rowSlot);
+
+          if (!cancelCheck.allowed) {
+            return jsonResponse({
+              success: false,
+              error: "CANCELLATION_WINDOW_CLOSED",
+              message: cancelCheck.reason || "Cannot cancel because it has passed the minimum 2-hour required notice for cancellation. Please contact Zelebrae staff directly on WhatsApp (85858 55859)."
+            });
+          }
+
           sheet.getRange(i + 1, 15).setValue("CANCELLED"); // Column O (status)
           foundBooking = true;
           break;
@@ -1054,3 +1081,55 @@ function handleCancelBooking(body, masterSS) {
     message: "Your celebration booking has been successfully cancelled. The slot has been released."
   });
 }
+
+/**
+ * Checks whether a booking slot can be cancelled (minimum 2 hours in advance in Asia/Kolkata)
+ */
+function isCancellationPermitted(dateStr, slotStr) {
+  if (!dateStr || !slotStr) return { allowed: true };
+
+  var normSlot = normalizeSlot(slotStr);
+  var m = normSlot.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!m) return { allowed: true };
+
+  var hours = parseInt(m[1], 10);
+  var minutes = m[2];
+  var ampm = m[3].toUpperCase();
+
+  if (ampm === 'AM') {
+    if (hours === 12) hours = 0;
+  } else if (ampm === 'PM') {
+    if (hours !== 12) hours += 12;
+  }
+
+  var hhStr = hours < 10 ? '0' + hours : '' + hours;
+  var parts = dateStr.trim().replace(/\//g, '-').split('-');
+  if (parts.length === 3) {
+    var y = parts[0];
+    var mo = parts[1].length < 2 ? '0' + parts[1] : parts[1];
+    var d = parts[2].length < 2 ? '0' + parts[2] : parts[2];
+    var isoStr = y + '-' + mo + '-' + d + 'T' + hhStr + ':' + minutes + ':00+05:30';
+    var slotTime = new Date(isoStr).getTime();
+    var now = new Date().getTime();
+    var diffHours = (slotTime - now) / (1000 * 60 * 60);
+
+    if (diffHours <= 0) {
+      return {
+        allowed: false,
+        hoursRemaining: diffHours,
+        reason: "This celebration slot time has already passed."
+      };
+    }
+
+    if (diffHours < 2) {
+      return {
+        allowed: false,
+        hoursRemaining: diffHours,
+        reason: "Cannot cancel because it has passed the minimum 2-hour required notice for cancellation."
+      };
+    }
+  }
+
+  return { allowed: true };
+}
+

@@ -2062,6 +2062,63 @@ body.modal-open {
   background: #BE123C;
 }
 
+.cancel-locked-notice {
+  width: 100%;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cancel-locked-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #B45309;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.cancel-locked-icon {
+  flex-shrink: 0;
+  color: #D97706;
+}
+
+.cancel-locked-desc {
+  font-size: 0.78rem;
+  color: #78350F;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.btn-cancel-whatsapp {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #25D366;
+  color: #FFFFFF;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.32rem 0.75rem;
+  border-radius: var(--radius-full);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  box-shadow: 0 1px 4px rgba(37, 211, 102, 0.25);
+}
+
+.btn-cancel-whatsapp:hover {
+  background: #1EBE5D;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.35);
+  color: #FFFFFF;
+}
+
+
 .manage-empty-state {
   text-align: center;
   padding: 2.5rem 1rem;

@@ -132,3 +132,79 @@ export function normalizeSlotTime(slotStr: string): string {
 
   return trimmed;
 }
+
+export interface CancellationEligibility {
+  allowed: boolean;
+  hoursRemaining: number;
+  reason?: string;
+}
+
+/**
+ * Parses a celebration date (YYYY-MM-DD) and time slot ("01:30 PM") into a Date object in IST (+05:30)
+ */
+export function parseSlotDateTime(dateStr: string, timeSlotStr: string): Date | null {
+  if (!dateStr || !timeSlotStr) return null;
+
+  // Normalize date format YYYY-MM-DD
+  const parts = dateStr.trim().replace(/\//g, '-').split('-');
+  if (parts.length !== 3) return null;
+  const y = parts[0];
+  const m = parts[1].padStart(2, '0');
+  const d = parts[2].padStart(2, '0');
+  const cleanDate = `${y}-${m}-${d}`;
+
+  const normalized = normalizeSlotTime(timeSlotStr);
+  const match = normalized.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const ampm = match[3].toUpperCase();
+
+  if (ampm === 'AM') {
+    if (hours === 12) hours = 0;
+  } else if (ampm === 'PM') {
+    if (hours !== 12) hours += 12;
+  }
+
+  const hh24 = hours.toString().padStart(2, '0');
+  const isoString = `${cleanDate}T${hh24}:${minutes}:00+05:30`;
+  const parsed = new Date(isoString);
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/**
+ * Validates whether a booking can be cancelled based on the strict 2-hour advance cutoff rule
+ */
+export function isCancellationAllowed(dateStr: string, timeSlotStr: string): CancellationEligibility {
+  const slotDate = parseSlotDateTime(dateStr, timeSlotStr);
+  if (!slotDate) {
+    return { allowed: true, hoursRemaining: 999 };
+  }
+
+  const now = Date.now();
+  const diffMs = slotDate.getTime() - now;
+  const hoursRemaining = diffMs / (1000 * 60 * 60);
+
+  if (diffMs <= 0) {
+    return {
+      allowed: false,
+      hoursRemaining,
+      reason: 'This celebration time has already passed.'
+    };
+  }
+
+  if (hoursRemaining < 2) {
+    return {
+      allowed: false,
+      hoursRemaining,
+      reason: 'Cannot cancel because it has passed the minimum 2-hour required notice for cancellation.'
+    };
+  }
+
+  return {
+    allowed: true,
+    hoursRemaining
+  };
+}
+

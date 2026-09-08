@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { ManageableBooking } from '../types/booking';
 import { bookingApi } from '../services/bookingApi';
-import { formatCelebrationDate, formatTimeSlotRange } from '../utils/dateUtils';
+import { formatCelebrationDate, formatTimeSlotRange, isCancellationAllowed } from '../utils/dateUtils';
 
 interface ManageBookingsModalProps {
   isOpen: boolean;
@@ -278,6 +278,7 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
                 {bookings.map((b) => {
                   const isConfirmed = b.status === 'CONFIRMED';
                   const isBeingCancelled = cancellingId === b.bookingId;
+                  const cancelEligibility = isCancellationAllowed(b.date, b.timeSlot);
 
                   return (
                     <div key={b.bookingId} className={`manage-booking-card ${!isConfirmed ? 'cancelled' : ''}`}>
@@ -321,55 +322,77 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
                       {/* Cancellation Actions */}
                       {isConfirmed && (
                         <div className="manage-card-actions">
-                          {isBeingCancelled ? (
-                            <div className="cancel-confirm-box animate-fade-in">
-                              <p className="cancel-confirm-prompt">
-                                Are you sure you want to cancel this celebration? Your slot will be released immediately.
-                              </p>
-                              <div className="cancel-confirm-btns">
-                                <button
-                                  type="button"
-                                  className="btn btn-danger"
-                                  onClick={() => handleConfirmCancel(b.bookingId)}
-                                  disabled={isCancelling}
-                                >
-                                  {isCancelling ? (
-                                    <>
-                                      <Loader2 size={14} className="animate-spin" />
-                                      <span>Cancelling...</span>
-                                    </>
-                                  ) : (
-                                    <span>Yes, Cancel Booking</span>
-                                  )}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-secondary"
-                                  onClick={() => setCancellingId(null)}
-                                  disabled={isCancelling}
-                                >
-                                  Keep Booking
-                                </button>
+                          {cancelEligibility.allowed ? (
+                            isBeingCancelled ? (
+                              <div className="cancel-confirm-box animate-fade-in">
+                                <p className="cancel-confirm-prompt">
+                                  Are you sure you want to cancel this celebration? Your slot will be released immediately.
+                                </p>
+                                <div className="cancel-confirm-btns">
+                                  <button
+                                    type="button"
+                                    className="btn btn-danger"
+                                    onClick={() => handleConfirmCancel(b.bookingId)}
+                                    disabled={isCancelling}
+                                  >
+                                    {isCancelling ? (
+                                      <>
+                                        <Loader2 size={14} className="animate-spin" />
+                                        <span>Cancelling...</span>
+                                      </>
+                                    ) : (
+                                      <span>Yes, Cancel Booking</span>
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => setCancellingId(null)}
+                                    disabled={isCancelling}
+                                  >
+                                    Keep Booking
+                                  </button>
+                                </div>
                               </div>
-                            </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="btn btn-cancel-booking"
+                                onClick={() => {
+                                  setCancellingId(b.bookingId);
+                                  setErrorMessage(null);
+                                  setSuccessMessage(null);
+                                }}
+                              >
+                                Cancel This Celebration
+                              </button>
+                            )
                           ) : (
-                            <button
-                              type="button"
-                              className="btn btn-cancel-booking"
-                              onClick={() => {
-                                setCancellingId(b.bookingId);
-                                setErrorMessage(null);
-                                setSuccessMessage(null);
-                              }}
-                            >
-                              Cancel This Celebration
-                            </button>
+                            <div className="cancel-locked-notice animate-fade-in">
+                              <div className="cancel-locked-header">
+                                <AlertCircle size={15} className="cancel-locked-icon" />
+                                <span className="cancel-locked-title">Cancellation Not Available</span>
+                              </div>
+                              <p className="cancel-locked-desc">
+                                {cancelEligibility.reason || 'Cannot cancel because it has passed the minimum 2-hour required notice for cancellation.'}
+                              </p>
+                              <a
+                                href={`https://wa.me/918585855859?text=${encodeURIComponent(`Hello Zelebrae, I need urgent assistance regarding my celebration booking ${b.bookingId} on ${b.date} at ${b.timeSlot}.`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-cancel-whatsapp"
+                              >
+                                <Phone size={12} />
+                                <span>Need Help? Chat on WhatsApp</span>
+                              </a>
+                            </div>
                           )}
                         </div>
                       )}
                     </div>
                   );
                 })}
+
               </div>
             )}
           </div>

@@ -1,11 +1,11 @@
 import { AppConfig, BookingApiResponse, BookingState, AvailabilityResponse, ManageableBooking } from '../types/booking';
 import { DEFAULT_APP_CONFIG, STANDARD_TIME_SLOTS } from '../config/constants';
-import { getKolkataToday, normalizeSlotTime } from '../utils/dateUtils';
+import { getKolkataToday, normalizeSlotTime, isCancellationAllowed, addDays } from '../utils/dateUtils';
 
 const API_ENDPOINT = import.meta.env.VITE_BOOKING_API_URL?.trim() || '';
 
 // In-memory & SessionStorage Mock Store for local preview & offline resiliency
-const MOCK_STORAGE_KEY = 'zelebrae_mock_bookings_v2';
+const MOCK_STORAGE_KEY = 'zelebrae_mock_bookings_v3';
 
 interface MockBookingItem {
   id: string;
@@ -28,6 +28,24 @@ function getStoredMockBookings(): MockBookingItem[] {
   // Pre-populate some realistic booked slots for schedule display
   const today = getKolkataToday();
   const sampleBookings: MockBookingItem[] = [
+    {
+      id: 'ZB-BK-8581',
+      location: 'pantheerankavu',
+      date: addDays(today, 1),
+      timeSlot: '04:30 PM',
+      name: 'Customer Service',
+      whatsapp: '+91 85858 55859',
+      status: 'confirmed'
+    },
+    {
+      id: 'ZB-BK-8582',
+      location: 'karaparamba',
+      date: today,
+      timeSlot: '09:30 AM',
+      name: 'Customer Service',
+      whatsapp: '+91 85858 55859',
+      status: 'confirmed'
+    },
     {
       id: 'ZB-BK-8901',
       location: 'pantheerankavu',
@@ -332,6 +350,14 @@ export const bookingApi = {
       // Fallback: Update mock session store
       await new Promise(r => setTimeout(r, 500));
       const mockList = getStoredMockBookings();
+      const target = mockList.find(b => b.id === bookingId);
+      if (target) {
+        const eligibility = isCancellationAllowed(target.date, target.timeSlot);
+        if (!eligibility.allowed) {
+          throw new Error(eligibility.reason || 'Cannot cancel because it has passed the minimum 2-hour required notice for cancellation.');
+        }
+      }
+
       const updated = mockList.map(b => {
         if (b.id === bookingId) {
           return { ...b, status: 'cancelled' as const };
