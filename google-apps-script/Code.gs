@@ -836,6 +836,55 @@ function setupSeparateBranchSpreadsheets() {
 
 /**
  * ============================================================================
+ * ONE-CLICK TEST & DRIVE PERMISSION AUTHORIZER:
+ * Run this function in Apps Script to:
+ * 1. Grant Google Drive permissions to create & save payment screenshots
+ * 2. Automatically create the "Zelebrae Payment Proofs" Google Drive folder
+ * 3. Add the "payment_screenshot" column (Column 16 / P) to all your sheets
+ * ============================================================================
+ */
+function testDriveAndSheetSetup() {
+  Logger.log("1. Checking Google Drive folder for payment receipts...");
+  const folderName = "Zelebrae Payment Proofs";
+  const folders = DriveApp.getFoldersByName(folderName);
+  let folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+  try {
+    folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {}
+  Logger.log("✅ Google Drive folder verified: \"" + folder.getName() + "\"");
+  Logger.log("   Folder URL: " + folder.getUrl());
+
+  Logger.log("\n2. Updating headers on Master and Branch spreadsheets with 'payment_screenshot' column...");
+  const masterSS = getMasterSpreadsheet() || SpreadsheetApp.getActiveSpreadsheet();
+  if (masterSS) {
+    const sheets = masterSS.getSheets();
+    sheets.forEach(s => {
+      const sName = s.getName();
+      if (s.getLastRow() > 0 && sName !== "Branch Links" && sName !== "Locations" && sName !== "Slots") {
+        ensureHeaderColumns(s);
+        Logger.log("  ✅ Checked master tab: " + sName);
+      }
+    });
+  }
+
+  // Also check branch spreadsheets
+  for (const key in LOCATION_SHEET_MAP) {
+    const bSS = getLocationSpreadsheet(key);
+    if (bSS) {
+      const bSheet = getBookingTargetSheet(bSS, key);
+      if (bSheet) {
+        ensureHeaderColumns(bSheet);
+        Logger.log("  ✅ Checked branch sheet: " + bSS.getName());
+      }
+    }
+  }
+
+  SpreadsheetApp.flush();
+  Logger.log("\n🎉 ALL SET! Google Drive and Spreadsheets are fully configured for payment screenshot uploads.");
+}
+
+/**
+ * ============================================================================
  * ONE-CLICK COMPLETE SETUP FUNCTION:
  * Run this in Apps Script Editor to set up:
  * 1. The central Master Spreadsheet ("All Bookings", "Branch Links", Config)
