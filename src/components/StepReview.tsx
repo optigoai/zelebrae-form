@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Sparkles, 
   MapPin, 
@@ -303,8 +304,8 @@ export const StepReview: React.FC<StepReviewProps> = ({
         }}
       />
 
-      {/* Receipt Proof Zoom Modal */}
-      {isReceiptZoomOpen && state.paymentScreenshot && (
+      {/* Receipt Proof Zoom Modal (Rendered into document.body to avoid parent transform traps) */}
+      {isReceiptZoomOpen && state.paymentScreenshot && createPortal(
         <div className="combo-preview-overlay" onClick={() => setIsReceiptZoomOpen(false)}>
           <div className="combo-preview-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
             <div className="combo-preview-header">
@@ -339,7 +340,8 @@ export const StepReview: React.FC<StepReviewProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

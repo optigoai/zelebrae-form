@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   User, 
   MapPin, 
@@ -100,6 +101,16 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
       fileInputRef.current.value = '';
     }
   };
+
+  // Lock body scroll when QR zoom modal is open
+  React.useEffect(() => {
+    if (isQrZoomOpen) {
+      document.body.classList.add('modal-open');
+      return () => {
+        document.body.classList.remove('modal-open');
+      };
+    }
+  }, [isQrZoomOpen]);
 
   return (
     <div className="animate-fade-in">
@@ -414,8 +425,8 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
         </div>
       </div>
 
-      {/* Lightbox Zoom for Payment QR */}
-      {isQrZoomOpen && (
+      {/* Lightbox Zoom for Payment QR (Rendered into document.body to avoid parent transform traps) */}
+      {isQrZoomOpen && createPortal(
         <div className="combo-preview-overlay" onClick={() => setIsQrZoomOpen(false)}>
           <div className="combo-preview-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
             <div className="combo-preview-header">
@@ -429,11 +440,12 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
                 <X size={18} />
               </button>
             </div>
-            <div className="combo-preview-img-container" style={{ background: '#FFFFFF', padding: '1rem' }}>
+            <div className="combo-preview-img-container" style={{ background: '#FFFFFF', padding: '1.25rem 1rem', display: 'flex', justifyContent: 'center' }}>
               <img 
                 src="/images/payment-qr.png" 
                 alt="Pine Labs Scan & Pay UPI QR Code" 
-                style={{ maxHeight: '65vh', objectFit: 'contain' }}
+                className="combo-preview-img"
+                style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain' }}
               />
             </div>
             <div className="combo-preview-footer" style={{ justifyContent: 'space-between' }}>
@@ -450,7 +462,8 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

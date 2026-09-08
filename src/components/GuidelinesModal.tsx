@@ -1,6 +1,6 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, ShieldAlert, CheckCircle2 } from 'lucide-react';
-import { GUIDELINES_LIST } from '../config/constants';
 
 interface GuidelinesModalProps {
   isOpen: boolean;
@@ -33,28 +33,22 @@ export const GuidelinesModal: React.FC<GuidelinesModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div 
       className="modal-overlay" 
       onClick={onClose} 
-      onTouchMove={(e) => {
-        if (e.target === e.currentTarget) {
-          e.preventDefault();
-        }
-      }}
       role="dialog" 
       aria-modal="true" 
       aria-labelledby="guidelines-modal-title"
     >
       <div 
-        className="modal-content" 
+        className="modal-content guidelines-modal-content" 
         onClick={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
+        <div className="modal-header guidelines-modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <ShieldAlert size={22} color="#FDE68A" />
-            <h3 id="guidelines-modal-title">Celebration Area Guidelines</h3>
+            <h3 id="guidelines-modal-title" style={{ margin: 0, fontSize: '1.15rem' }}>Celebration Area Guidelines</h3>
           </div>
           <button 
             type="button" 
@@ -66,35 +60,21 @@ export const GuidelinesModal: React.FC<GuidelinesModalProps> = ({
           </button>
         </div>
 
-        <div className="modal-body">
-          <div className="guidelines-poster-wrap">
+        <div className="guidelines-modal-body">
+          <div className="guidelines-poster-container">
             <img
-              src="/Guidelines.jpg"
+              src="/images/celebration-guidelines.jpg"
               alt="Official Zelebrae Celebration Area Guidelines Poster"
-              className="guidelines-poster-img"
-              loading="lazy"
+              className="guidelines-poster-full-img"
             />
           </div>
-
-          <p style={{ fontSize: '0.88rem', color: 'var(--color-brand-purple)', fontWeight: 600 }}>
-            This celebration space is complimentary for Zelebrae customers. Kindly follow the rules below for a smooth, memorable experience:
-          </p>
-
-          <ol className="rules-list">
-            {GUIDELINES_LIST.map((rule, index) => (
-              <li key={index} className="rule-item">
-                <span className="rule-number">{index + 1}</span>
-                <span>{rule}</span>
-              </li>
-            ))}
-          </ol>
         </div>
 
-        <div className="modal-footer" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+        <div className="modal-footer guidelines-modal-footer">
+          <span className="guidelines-footer-brand">
             Zelebrae Pastries • Kozhikode
           </span>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="guidelines-footer-actions">
             <button type="button" className="btn btn-secondary" onClick={onClose} style={{ padding: '0.5rem 1rem' }}>
               Close
             </button>
@@ -103,15 +83,16 @@ export const GuidelinesModal: React.FC<GuidelinesModalProps> = ({
                 type="button" 
                 className="btn btn-cta" 
                 onClick={onAgreeAndClose}
-                style={{ padding: '0.5rem 1.2rem' }}
+                style={{ padding: '0.5rem 1.2rem', gap: '0.4rem' }}
               >
                 <CheckCircle2 size={16} />
-                I Understand & Agree
+                <span>I Understand & Agree</span>
               </button>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

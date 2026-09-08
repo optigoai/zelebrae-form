@@ -77,7 +77,7 @@ export const StepOccasionGuests: React.FC<StepOccasionGuestsProps> = ({
                 </div>
               )}
               <div className="occasion-icon-wrap" aria-hidden="true">
-                <OccasionIcon iconName={occ.icon} size={22} />
+                <OccasionIcon iconName={occ.icon} size={20} />
               </div>
               <div className="occasion-title">{occ.name}</div>
             </div>
