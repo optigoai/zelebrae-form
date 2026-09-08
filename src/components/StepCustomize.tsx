@@ -108,55 +108,18 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
           <Sparkles size={14} />
           Step 4 of 5
         </span>
-        <h1 className="step-title">Included Amenities</h1>
+        <h1 className="step-title">Party Accessories & Combos</h1>
+
       </div>
 
-      {/* Section 1: Included Amenities */}
-      <div>
-        <div className="amenities-list">
-          {amenities.map((amenity) => {
-            const isSelected = selectedAmenities.includes(amenity.id);
-
-            return (
-              <div
-                key={amenity.id}
-                className={`amenity-card ${isSelected ? 'selected' : ''}`}
-                onClick={() => onToggleAmenity(amenity.id)}
-                role="checkbox"
-                aria-checked={isSelected}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onToggleAmenity(amenity.id);
-                  }
-                }}
-              >
-                <div className="amenity-icon" aria-hidden="true">
-                  <AmenityIcon iconName={amenity.icon} size={20} />
-                </div>
-
-                <div className="amenity-content">
-                  <div className="amenity-title-row">
-                    <span className="amenity-title">{amenity.name}</span>
-                  </div>
-                </div>
-
-                <div className="custom-checkbox">
-                  {isSelected && <Check size={14} strokeWidth={3} />}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Section 2: Combos & Party Accessories */}
-      <div>
-        <div className="section-block-title">
+      {/* ===================================================================
+          Section 1: Party Accessories & Combos (At Top for Zero-Scroll)
+          =================================================================== */}
+      <div className="combos-section-wrap">
+        <div className="section-block-title" style={{ marginBottom: '0.45rem' }}>
           <div>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Gift size={20} color="#592F7C" />
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '1.05rem' }}>
+              <Gift size={16} color="#592F7C" />
               Party Accessories & Combos
             </h3>
           </div>
@@ -347,6 +310,58 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
         </div>
       </div>
 
+      {/* ===================================================================
+          Section 2: Included Amenities (Compact 2-Column at Bottom)
+          =================================================================== */}
+      <div className="amenities-section-wrap" style={{ marginTop: '0.4rem' }}>
+        <div className="section-block-title" style={{ marginBottom: '0.45rem' }}>
+          <div>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '1.05rem' }}>
+              <Sparkles size={16} color="#592F7C" />
+              Included Amenities
+              <span className="complimentary-pill" style={{ marginLeft: '0.35rem' }}>Complimentary</span>
+            </h3>
+          </div>
+        </div>
+
+        <div className="amenities-list">
+          {amenities.map((amenity) => {
+            const isSelected = selectedAmenities.includes(amenity.id);
+
+            return (
+              <div
+                key={amenity.id}
+                className={`amenity-card ${isSelected ? 'selected' : ''}`}
+                onClick={() => onToggleAmenity(amenity.id)}
+                role="checkbox"
+                aria-checked={isSelected}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onToggleAmenity(amenity.id);
+                  }
+                }}
+              >
+                <div className="amenity-icon" aria-hidden="true">
+                  <AmenityIcon iconName={amenity.icon} size={17} />
+                </div>
+
+                <div className="amenity-content">
+                  <div className="amenity-title-row">
+                    <span className="amenity-title">{amenity.name}</span>
+                  </div>
+                </div>
+
+                <div className="custom-checkbox">
+                  {isSelected && <Check size={13} strokeWidth={3} />}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Lightbox / Full Photo Preview Modal */}
       {previewImage && (
         <div
@@ -394,7 +409,7 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
                   className="btn btn-secondary"
                   style={{ fontSize: '0.82rem', padding: '0.45rem 0.9rem', gap: '0.4rem' }}
                 >
-                  <span>Open PDF Menu</span>
+                  <span>Open Combo Details</span>
                   <ExternalLink size={13} />
                 </a>
               )}
@@ -413,4 +428,3 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
     </div>
   );
 };
-

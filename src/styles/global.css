@@ -40,12 +40,12 @@ body {
   width: 100%;
   max-width: var(--max-content-width);
   margin: 0 auto;
-  padding: 1.25rem 1rem calc(var(--bottom-bar-height) + 2rem) 1rem;
+  padding: 0.65rem 0.85rem calc(var(--bottom-bar-height) + 1.25rem) 0.85rem;
 }
 
 @media (min-width: 640px) {
   .main-content {
-    padding: 2rem 1.5rem calc(var(--bottom-bar-height) + 2.5rem) 1.5rem;
+    padding: 1.15rem 1.25rem calc(var(--bottom-bar-height) + 1.85rem) 1.25rem;
   }
 }
 
