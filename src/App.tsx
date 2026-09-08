@@ -54,6 +54,8 @@ export const App: React.FC = () => {
     whatsapp: '',
     email: '',
     additionalRequirements: '',
+    paymentScreenshot: '',
+    paymentScreenshotName: '',
     guidelinesAgreed: false
   });
 
@@ -195,7 +197,8 @@ export const App: React.FC = () => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         hasValidEmail = emailRegex.test(bookingState.email.trim());
       }
-      return hasValidName && hasValidLocation && hasValidPhone && hasValidEmail;
+      const hasPayment = Boolean(bookingState.paymentScreenshot);
+      return hasValidName && hasValidLocation && hasValidPhone && hasValidEmail && hasPayment;
     }
     if (step === 6) {
       return bookingState.guidelinesAgreed;
@@ -222,6 +225,9 @@ export const App: React.FC = () => {
         if (!emailRegex.test(bookingState.email.trim())) {
           errors.email = 'Please enter a valid email address';
         }
+      }
+      if (!bookingState.paymentScreenshot) {
+        errors.paymentScreenshot = 'Please upload your ₹500 advance payment screenshot to proceed';
       }
       setFieldErrors(errors);
       return Object.keys(errors).length === 0;
@@ -306,6 +312,8 @@ export const App: React.FC = () => {
       whatsapp: '',
       email: '',
       additionalRequirements: '',
+      paymentScreenshot: '',
+      paymentScreenshotName: '',
       guidelinesAgreed: false
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -430,6 +438,8 @@ export const App: React.FC = () => {
                 whatsapp={bookingState.whatsapp}
                 email={bookingState.email}
                 additionalRequirements={bookingState.additionalRequirements}
+                paymentScreenshot={bookingState.paymentScreenshot}
+                paymentScreenshotName={bookingState.paymentScreenshotName}
                 onChangeField={handleChangeField}
                 errors={fieldErrors}
               />

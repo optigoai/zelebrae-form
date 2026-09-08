@@ -9,7 +9,8 @@ import {
   User, 
   Phone, 
   FileText, 
-  Edit3 
+  Edit3,
+  X
 } from 'lucide-react';
 import { BookingState, CelebrationLocation, Occasion, Amenity, ComboItem } from '../types/booking';
 import { formatCelebrationDate, formatTimeSlotRange } from '../utils/dateUtils';
@@ -36,6 +37,7 @@ export const StepReview: React.FC<StepReviewProps> = ({
   onToggleGuidelines
 }) => {
   const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false);
+  const [isReceiptZoomOpen, setIsReceiptZoomOpen] = useState(false);
 
   const currentLocation = locations.find(l => l.id === state.location);
   const currentOccasion = occasions.find(o => o.id === state.occasion);
@@ -209,6 +211,53 @@ export const StepReview: React.FC<StepReviewProps> = ({
               <Edit3 size={13} /> Edit
             </button>
           </div>
+
+          {/* Section 5: Advance Payment Deposit */}
+          <div className="review-section">
+            <div className="review-info-group">
+              <span className="review-label">Advance Confirmation Deposit</span>
+              <div style={{ marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                {state.paymentScreenshot && (
+                  <img
+                    src={state.paymentScreenshot}
+                    alt="Payment Screenshot"
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      objectFit: 'cover',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1.5px solid var(--color-border-card)',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
+                    }}
+                    onClick={() => setIsReceiptZoomOpen(true)}
+                    title="Click to view payment receipt"
+                  />
+                )}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span style={{ fontWeight: 800, color: '#059669', fontSize: '0.98rem' }}>
+                      ₹500 Paid
+                    </span>
+                    <span className="badge badge-rose" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
+                      Advance Deposit
+                    </span>
+                  </div>
+                  <span className="review-subtext" style={{ display: 'block', marginTop: '0.1rem' }}>
+                    Deducted from final venue bill · Receipt proof attached
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="edit-btn"
+              onClick={() => onEditStep(5)}
+              aria-label="Edit payment proof"
+            >
+              <Edit3 size={13} /> Edit
+            </button>
+          </div>
         </div>
       </div>
 
@@ -253,6 +302,45 @@ export const StepReview: React.FC<StepReviewProps> = ({
           setIsGuidelinesOpen(false);
         }}
       />
+
+      {/* Receipt Proof Zoom Modal */}
+      {isReceiptZoomOpen && state.paymentScreenshot && (
+        <div className="combo-preview-overlay" onClick={() => setIsReceiptZoomOpen(false)}>
+          <div className="combo-preview-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+            <div className="combo-preview-header">
+              <h3 className="combo-preview-title">Payment Screenshot Proof</h3>
+              <button 
+                type="button" 
+                className="combo-modal-close" 
+                onClick={() => setIsReceiptZoomOpen(false)}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="combo-preview-img-container" style={{ background: '#0F172A', padding: '0.75rem' }}>
+              <img 
+                src={state.paymentScreenshot} 
+                alt="Uploaded Payment Receipt" 
+                style={{ maxHeight: '68vh', maxWidth: '100%', objectFit: 'contain' }}
+              />
+            </div>
+            <div className="combo-preview-footer" style={{ justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
+                {state.paymentScreenshotName || 'payment_receipt.jpg'}
+              </span>
+              <button 
+                type="button" 
+                className="btn-modal-primary" 
+                onClick={() => setIsReceiptZoomOpen(false)}
+                style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem' }}
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

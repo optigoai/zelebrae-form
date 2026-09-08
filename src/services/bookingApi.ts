@@ -225,6 +225,8 @@ export const bookingApi = {
       whatsapp: `'${state.countryCode} ${state.whatsapp.trim()}`,
       email: state.email.trim(),
       additional_requirements: state.additionalRequirements.trim(),
+      payment_screenshot_base64: state.paymentScreenshot || '',
+      payment_screenshot_name: state.paymentScreenshotName || '',
       guidelines_agreed: state.guidelinesAgreed,
       created_at: new Date().toISOString()
     };

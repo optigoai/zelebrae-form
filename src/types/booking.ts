@@ -72,6 +72,8 @@ export interface BookingState {
   whatsapp: string;
   email: string;
   additionalRequirements: string;
+  paymentScreenshot?: string; // base64 data URL
+  paymentScreenshotName?: string;
   guidelinesAgreed: boolean;
 }
 

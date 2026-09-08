@@ -90,7 +90,8 @@ const BOOKING_HEADERS = [
   "additional_requirements",
   "amenities",
   "combo",
-  "status"
+  "status",
+  "payment_screenshot"
 ];
 
 /**
@@ -370,6 +371,15 @@ function doPost(e) {
     const bookingId = "ZB-" + cleanDate + "-" + randomSuffix;
     const createdAt = Utilities.formatDate(new Date(), TIMEZONE, "yyyy-MM-dd'T'HH:mm:ssXXX");
 
+    // 5b. Save payment screenshot to Google Drive if uploaded
+    const rawPaymentBase64 = (body.payment_screenshot_base64 || body.paymentScreenshot || '').toString().trim();
+    const rawPaymentName = (body.payment_screenshot_name || body.paymentScreenshotName || 'receipt.jpg').toString().trim();
+    let paymentScreenshotUrl = '';
+
+    if (rawPaymentBase64) {
+      paymentScreenshotUrl = savePaymentScreenshotToDrive(rawPaymentBase64, rawPaymentName, bookingId);
+    }
+
     // 6. Prepare booking data row
     const targetLocationName = getLocationSheetName(rawLocation);
     const cellWhatsapp = "'" + rawWhatsapp;
@@ -390,7 +400,8 @@ function doPost(e) {
       additionalRequirements,
       amenities,
       combo,
-      "confirmed"
+      "confirmed",
+      paymentScreenshotUrl
     ];
 
     // 7. Write to the branch's dedicated spreadsheet
@@ -399,6 +410,7 @@ function doPost(e) {
     if (branchSpreadsheet) {
       branchTargetSheet = getBookingTargetSheet(branchSpreadsheet, rawLocation);
       if (branchTargetSheet) {
+        ensureHeaderColumns(branchTargetSheet);
         branchTargetSheet.appendRow(bookingRow);
       }
     }
@@ -413,6 +425,8 @@ function doPost(e) {
           .setFontWeight("bold")
           .setBackground("#592F7C")
           .setFontColor("#FFFFFF");
+      } else {
+        ensureHeaderColumns(masterAllSheet);
       }
 
       // Avoid duplicate appending if masterSS and branchSpreadsheet are the exact same sheet tab
@@ -434,6 +448,8 @@ function doPost(e) {
             .setFontWeight("bold")
             .setBackground("#592F7C")
             .setFontColor("#FFFFFF");
+        } else {
+          ensureHeaderColumns(masterLocTab);
         }
         masterLocTab.appendRow(bookingRow);
       }
@@ -461,6 +477,68 @@ function doPost(e) {
   } finally {
     // Always release lock
     lock.releaseLock();
+  }
+}
+
+/**
+ * Saves uploaded base64 payment receipt image to Google Drive folder "Zelebrae Payment Proofs"
+ * Returns the shareable Google Drive view link so managers can click to view the screenshot directly from the spreadsheet.
+ */
+function savePaymentScreenshotToDrive(base64Data, fileName, bookingId) {
+  if (!base64Data) return '';
+  try {
+    const folderName = "Zelebrae Payment Proofs";
+    const folders = DriveApp.getFoldersByName(folderName);
+    let folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+
+    try {
+      folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (e) {}
+
+    // Clean data URL prefix if present (e.g. "data:image/jpeg;base64,...")
+    let contentType = 'image/jpeg';
+    let cleanBase64 = base64Data;
+    const match = base64Data.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      contentType = match[1];
+      cleanBase64 = match[2];
+    }
+
+    const decodedBytes = Utilities.base64Decode(cleanBase64);
+    const cleanFileName = (fileName || 'payment_receipt.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const blobName = (bookingId || 'ZB-PAY') + '_' + cleanFileName;
+    const blob = Utilities.newBlob(decodedBytes, contentType, blobName);
+
+    const file = folder.createFile(blob);
+    try {
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (e) {}
+
+    return file.getUrl();
+  } catch (err) {
+    Logger.log("⚠️ Failed to save payment screenshot to Google Drive: " + err.toString());
+    return "";
+  }
+}
+
+/**
+ * Ensures that a sheet's header row includes the "payment_screenshot" column
+ */
+function ensureHeaderColumns(sheet) {
+  if (!sheet || sheet.getLastRow() === 0) return;
+  try {
+    const numCols = Math.max(sheet.getLastColumn(), BOOKING_HEADERS.length);
+    const headerRow = sheet.getRange(1, 1, 1, numCols).getValues()[0];
+    if (!headerRow.includes("payment_screenshot")) {
+      const colIdx = BOOKING_HEADERS.indexOf("payment_screenshot") + 1;
+      sheet.getRange(1, colIdx).setValue("payment_screenshot")
+        .setFontWeight("bold")
+        .setBackground("#592F7C")
+        .setFontColor("#FFFFFF");
+      sheet.setColumnWidth(colIdx, 240);
+    }
+  } catch (e) {
+    Logger.log("Header check note: " + e.toString());
   }
 }
 
