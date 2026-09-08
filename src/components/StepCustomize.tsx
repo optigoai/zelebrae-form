@@ -1,5 +1,5 @@
-import React from 'react';
-import { Sparkles, Gift, Check, ExternalLink, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, Gift, Check, ExternalLink, ChevronDown, ZoomIn, X } from 'lucide-react';
 import { Amenity, ComboItem } from '../types/booking';
 import { AmenityIcon } from './CelebrationIcon';
 
@@ -19,15 +19,22 @@ interface StepCustomizeProps {
   menuPdfUrl?: string;
 }
 
+interface PreviewModalData {
+  url: string;
+  title: string;
+  price?: number;
+  driveUrl?: string;
+}
+
 const getCombosForOccasion = (combos: ComboItem[], occasion?: string): ComboItem[] => {
+  // Exclude 'none' option completely
+  const activeCombos = combos.filter(c => c.id !== 'none');
+
   if (!occasion || occasion === 'other') {
-    return combos;
+    return activeCombos;
   }
 
-  return combos.filter(combo => {
-    // Always include "none" (No Add-on Combo)
-    if (combo.id === 'none') return true;
-
+  const filtered = activeCombos.filter(combo => {
     const normOcc = occasion.toLowerCase().trim();
     const normId = combo.id.toLowerCase().trim();
     const normCat = (combo.category || '').toLowerCase().trim();
@@ -51,6 +58,8 @@ const getCombosForOccasion = (combos: ComboItem[], occasion?: string): ComboItem
 
     return true;
   });
+
+  return filtered.length > 0 ? filtered : activeCombos;
 };
 
 export const StepCustomize: React.FC<StepCustomizeProps> = ({
@@ -67,17 +76,30 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
   menuPdfUrl = COMBO_MENU_DRIVE_URL
 }) => {
   const driveUrl = menuPdfUrl || COMBO_MENU_DRIVE_URL;
+  const [previewImage, setPreviewImage] = useState<PreviewModalData | null>(null);
 
   const filteredCombos = React.useMemo(() => {
     return getCombosForOccasion(combos, occasion);
   }, [combos, occasion]);
 
-  // If the currently selected combo isn't in the filtered list, safely reset to 'none'
+  // If the currently selected combo isn't in the filtered list (or is 'none'), safely auto-select the first available combo
   React.useEffect(() => {
-    if (selectedCombo !== 'none' && !filteredCombos.some(c => c.id === selectedCombo)) {
-      onSelectCombo('none', undefined, 0);
+    if (filteredCombos.length > 0 && (!selectedCombo || selectedCombo === 'none' || !filteredCombos.some(c => c.id === selectedCombo))) {
+      const first = filteredCombos[0];
+      const firstOpt = first.options && first.options.length > 0 ? first.options[0] : undefined;
+      onSelectCombo(first.id, firstOpt?.code, firstOpt?.price ?? first.price);
     }
   }, [filteredCombos, selectedCombo, onSelectCombo]);
+
+  // Lock body scroll when preview lightbox is open
+  React.useEffect(() => {
+    if (previewImage) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [previewImage]);
 
   return (
     <div className="animate-fade-in customization-section">
@@ -91,7 +113,6 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
 
       {/* Section 1: Included Amenities */}
       <div>
-
         <div className="amenities-list">
           {amenities.map((amenity) => {
             const isSelected = selectedAmenities.includes(amenity.id);
@@ -144,8 +165,13 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
         <div className="combos-list" role="radiogroup" aria-label="Party Combos">
           {filteredCombos.map((combo) => {
             const isSelected = selectedCombo === combo.id;
-            const currentPrice = isSelected && selectedPrice !== undefined ? selectedPrice : combo.price;
+            const currentPkgCode = isSelected ? (selectedPackage || combo.options?.[0]?.code) : combo.options?.[0]?.code;
+            const currentOption = combo.options?.find(o => o.code === currentPkgCode) || combo.options?.[0];
+            const currentPrice = isSelected && selectedPrice !== undefined ? selectedPrice : (currentOption?.price ?? combo.price);
             const comboDriveUrl = combo.driveUrl || driveUrl;
+
+            // Determine image to display on the side of the combo option
+            const currentImage = currentOption?.image || combo.image || '/images/combos/birthday/cover.jpeg';
 
             return (
               <div
@@ -153,7 +179,7 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
                 className={`combo-card ${isSelected ? 'selected' : ''}`}
                 onClick={() => {
                   const firstOpt = combo.options && combo.options.length > 0 ? combo.options[0] : undefined;
-                  onSelectCombo(combo.id, firstOpt?.code, firstOpt?.price ?? combo.price);
+                  onSelectCombo(combo.id, currentPkgCode || firstOpt?.code, currentPrice || firstOpt?.price || combo.price);
                 }}
                 role="radio"
                 aria-checked={isSelected}
@@ -162,7 +188,7 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     const firstOpt = combo.options && combo.options.length > 0 ? combo.options[0] : undefined;
-                    onSelectCombo(combo.id, firstOpt?.code, firstOpt?.price ?? combo.price);
+                    onSelectCombo(combo.id, currentPkgCode || firstOpt?.code, currentPrice || firstOpt?.price || combo.price);
                   }
                 }}
               >
@@ -172,88 +198,219 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
                   </span>
                 )}
 
-                <div className="combo-header">
-                  <div className="combo-title-area">
-                    <div className="radio-circle">
-                      {isSelected && <div className="radio-inner-dot" />}
+                <div className="combo-card-layout">
+                  {/* Side Image Preview Thumbnail */}
+                  <div
+                    className="combo-side-image-wrapper"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewImage({
+                        url: currentImage,
+                        title: `${combo.name} (${currentPkgCode || 'Cover'})`,
+                        price: currentPrice,
+                        driveUrl: comboDriveUrl
+                      });
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View photo for ${combo.name} ${currentPkgCode || ''}`}
+                    title="Click to view full photo setup"
+                  >
+                    <img
+                      src={currentImage}
+                      alt={`${combo.name} ${currentPkgCode || ''}`}
+                      className="combo-side-image"
+                      loading="lazy"
+                    />
+                    <div className="combo-image-zoom-badge">
+                      <ZoomIn size={12} />
+                      <span>View</span>
                     </div>
-                    <span className="combo-name">{combo.name}</span>
                   </div>
 
-                  <div className="combo-actions-area">
-                    {combo.id !== 'none' && comboDriveUrl && (
-                      <a
-                        href={comboDriveUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="combo-view-menu-btn"
+                  {/* Details Section */}
+                  <div className="combo-details-area">
+                    <div className="combo-header">
+                      <div className="combo-title-area">
+                        <div className="radio-circle">
+                          {isSelected && <div className="radio-inner-dot" />}
+                        </div>
+                        <span className="combo-name">{combo.name}</span>
+                      </div>
+
+                      <div className="combo-actions-area">
+                        {comboDriveUrl && (
+                          <a
+                            href={comboDriveUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="combo-view-menu-btn"
+                            onClick={(e) => e.stopPropagation()}
+                            title={`Open full ${combo.name} PDF menu in Google Drive`}
+                          >
+                            <span>View Menu</span>
+                            <ExternalLink size={12} />
+                          </a>
+                        )}
+
+                        <span className="combo-price">₹{currentPrice}</span>
+                      </div>
+                    </div>
+
+                    <p className="combo-desc">{combo.description}</p>
+
+                    {/* Package Dropdown Selector */}
+                    {combo.options && combo.options.length > 0 && (
+                      <div
+                        className="combo-dropdown-wrapper"
                         onClick={(e) => e.stopPropagation()}
-                        title={`Open ${combo.name} in Google Drive`}
                       >
-                        <span>View Menu</span>
-                        <ExternalLink size={12} />
-                      </a>
+                        <label htmlFor={`combo-select-${combo.id}`} className="combo-select-label">
+                          <span className="required-star">*</span> Select Package Variant
+                        </label>
+                        <div className="combo-select-field">
+                          <select
+                            id={`combo-select-${combo.id}`}
+                            className="combo-select-input"
+                            value={currentPkgCode}
+                            onChange={(e) => {
+                              const chosen = combo.options?.find(o => o.code === e.target.value);
+                              if (chosen) {
+                                onSelectCombo(combo.id, chosen.code, chosen.price);
+                                onSelectPackage(chosen.code, chosen.price);
+                              }
+                            }}
+                          >
+                            {combo.options.map((opt) => (
+                              <option key={opt.code} value={opt.code}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="combo-select-chevron">
+                            <ChevronDown size={18} />
+                          </div>
+                        </div>
+                      </div>
                     )}
 
-                    {combo.price === 0 ? (
-                      <span className="combo-free">Included</span>
-                    ) : (
-                      <span className="combo-price">₹{currentPrice}</span>
+                    {/* Visual Variant Thumbnails Strip for Quick Switching */}
+                    {isSelected && combo.options && combo.options.length > 1 && (
+                      <div className="combo-variants-strip" onClick={(e) => e.stopPropagation()}>
+                        <span className="combo-variants-strip-label">Quick Select Variant:</span>
+                        <div className="combo-variants-scroll">
+                          {combo.options.map((opt) => {
+                            const isOptActive = currentPkgCode === opt.code;
+                            return (
+                              <button
+                                key={opt.code}
+                                type="button"
+                                className={`combo-variant-chip ${isOptActive ? 'active' : ''}`}
+                                onClick={() => {
+                                  onSelectCombo(combo.id, opt.code, opt.price);
+                                  onSelectPackage(opt.code, opt.price);
+                                }}
+                                title={`Select ${opt.label}`}
+                              >
+                                {opt.image && (
+                                  <img
+                                    src={opt.image}
+                                    alt={opt.code}
+                                    className="combo-variant-mini-thumb"
+                                    loading="lazy"
+                                  />
+                                )}
+                                <span className="combo-variant-code">{opt.code}</span>
+                                <span className="combo-variant-price">₹{opt.price}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {combo.includes && combo.includes.length > 0 && (
+                      <div className="combo-items-pills">
+                        {combo.includes.map((item, idx) => (
+                          <span key={idx} className="combo-item-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <Check size={12} strokeWidth={2.5} color="#592F7C" />
+                            <span>{item}</span>
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
-
-                <p className="combo-desc">{combo.description}</p>
-
-                {/* Dropdown for variant / price selection when combo is selected */}
-                {isSelected && combo.options && combo.options.length > 0 && (
-                  <div
-                    className="combo-dropdown-wrapper"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <label htmlFor={`combo-select-${combo.id}`} className="combo-select-label">
-                      <span className="required-star">*</span> Select {combo.name}
-                    </label>
-                    <div className="combo-select-field">
-                      <select
-                        id={`combo-select-${combo.id}`}
-                        className="combo-select-input"
-                        value={selectedPackage || combo.options[0]?.code}
-                        onChange={(e) => {
-                          const chosen = combo.options?.find(o => o.code === e.target.value);
-                          if (chosen) {
-                            onSelectPackage(chosen.code, chosen.price);
-                          }
-                        }}
-                      >
-                        {combo.options.map((opt) => (
-                          <option key={opt.code} value={opt.code}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="combo-select-chevron">
-                        <ChevronDown size={18} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {combo.includes && combo.includes.length > 0 && (
-                  <div className="combo-items-pills">
-                    {combo.includes.map((item, idx) => (
-                      <span key={idx} className="combo-item-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <Check size={12} strokeWidth={2.5} color="#592F7C" />
-                        <span>{item}</span>
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           })}
         </div>
       </div>
+
+      {/* Lightbox / Full Photo Preview Modal */}
+      {previewImage && (
+        <div
+          className="modal-overlay animate-fade-in combo-preview-overlay"
+          onClick={() => setPreviewImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={previewImage.title}
+        >
+          <div
+            className="modal-content combo-preview-card animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="combo-preview-header">
+              <div>
+                <h3 className="combo-preview-title">{previewImage.title}</h3>
+                {previewImage.price && (
+                  <span className="combo-preview-price">₹{previewImage.price}</span>
+                )}
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setPreviewImage(null)}
+                aria-label="Close photo preview"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="combo-preview-img-container">
+              <img
+                src={previewImage.url}
+                alt={previewImage.title}
+                className="combo-preview-img"
+              />
+            </div>
+
+            <div className="combo-preview-footer">
+              {previewImage.driveUrl && (
+                <a
+                  href={previewImage.driveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary"
+                  style={{ fontSize: '0.82rem', padding: '0.45rem 0.9rem', gap: '0.4rem' }}
+                >
+                  <span>Open PDF Menu</span>
+                  <ExternalLink size={13} />
+                </a>
+              )}
+              <button
+                type="button"
+                className="btn btn-cta"
+                style={{ fontSize: '0.82rem', padding: '0.45rem 1.15rem' }}
+                onClick={() => setPreviewImage(null)}
+              >
+                Got It
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

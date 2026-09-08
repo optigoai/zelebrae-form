@@ -125,70 +125,24 @@ export const DEFAULT_AMENITIES: Amenity[] = [
 
 export const DEFAULT_COMBOS: ComboItem[] = [
   {
-    id: 'none',
-    name: 'No Add-on Combo',
-    category: 'Standard',
-    description: 'Complimentary private celebration space with standard amenities only',
-    price: 0,
-    includes: [],
-    active: true
-  },
-  {
-    id: 'mom_to_be_combo',
-    name: 'Mom to Be Combo',
-    category: 'Mom to Be',
-    description: 'Special celebratory package tailored for baby shower surprises',
-    price: 730,
-    driveUrl: 'https://drive.google.com/file/d/1QaY5pqtC4KaQW3fdatM5pYWnmTlrZOoX/view?usp=drive_link',
-    options: [
-      { code: 'MC1', price: 730, label: 'MC1 ₹730/-' },
-      { code: 'MC2', price: 420, label: 'MC2 ₹420/-' },
-      { code: 'MC3', price: 440, label: 'MC3 ₹440/-' },
-      { code: 'MC4', price: 450, label: 'MC4 ₹450/-' },
-      { code: 'MC5', price: 580, label: 'MC5 ₹580/-' },
-      { code: 'MC6', price: 600, label: 'MC6 ₹600/-' }
-    ],
-    includes: [],
-    active: true
-  },
-  {
-    id: 'bride_to_be_combo',
-    name: 'Bride to Be Combo',
-    category: 'Bride to Be',
-    description: 'Glamorous bachelorette & bridal party accessory set',
-    price: 480,
-    driveUrl: 'https://drive.google.com/file/d/1QhuG5mnaGMxpRQ8qhmSt9NUXUb4gL-NI/view?usp=drivesdk',
-    options: [
-      { code: 'BC1', price: 480, label: 'BC1 ₹480/-' },
-      { code: 'BC2', price: 520, label: 'BC2 ₹520/-' },
-      { code: 'BC3', price: 560, label: 'BC3 ₹560/-' },
-      { code: 'BC4', price: 590, label: 'BC4 ₹590/-' },
-      { code: 'BC5', price: 640, label: 'BC5 ₹640/-' },
-      { code: 'BC6', price: 690, label: 'BC6 ₹690/-' },
-      { code: 'BC7', price: 1190, label: 'BC7 ₹1190/-' },
-      { code: 'BC8', price: 850, label: 'BC8 ₹850/-' },
-      { code: 'BC9', price: 920, label: 'BC9 ₹920/-' }
-    ],
-    includes: [],
-    active: true
-  },
-  {
     id: 'birthday_combo',
     name: 'Birthday Combo',
     category: 'Birthday',
     description: 'Complete birthday decor setup with sash, crown, candles & props',
     price: 350,
     driveUrl: 'https://drive.google.com/file/d/1utY7FdUORh4c7TjVr1a4vAy8Qhg6eY3l/view?usp=drivesdk',
+    image: '/images/combos/birthday/cover.jpeg',
     popular: true,
     options: [
-      { code: 'DC1', price: 350, label: 'DC1 ₹350/-' },
-      { code: 'DC2', price: 390, label: 'DC2 ₹390/-' },
-      { code: 'DC3', price: 390, label: 'DC3 ₹390/-' },
-      { code: 'DC4', price: 420, label: 'DC4 ₹420/-' },
-      { code: 'DC5', price: 450, label: 'DC5 ₹450/-' },
-      { code: 'DC6', price: 470, label: 'DC6 ₹470/-' },
-      { code: 'DC7', price: 530, label: 'DC7 ₹530/-' },
-      { code: 'DC8', price: 750, label: 'DC8 ₹750/-' }
+      { code: 'DC1', price: 350, label: 'DC1 ₹350/-', image: '/images/combos/birthday/DC1.jpeg' },
+      { code: 'DC2', price: 390, label: 'DC2 ₹390/-', image: '/images/combos/birthday/DC2.jpeg' },
+      { code: 'DC3', price: 390, label: 'DC3 ₹390/-', image: '/images/combos/birthday/DC3.jpeg' },
+      { code: 'DC4', price: 420, label: 'DC4 ₹420/-', image: '/images/combos/birthday/DC4.jpeg' },
+      { code: 'DC5', price: 450, label: 'DC5 ₹450/-', image: '/images/combos/birthday/DC5.jpeg' },
+      { code: 'DC6', price: 470, label: 'DC6 ₹470/-', image: '/images/combos/birthday/DC6.jpeg' },
+      { code: 'DC7', price: 530, label: 'DC7 ₹530/-', image: '/images/combos/birthday/DC7.jpeg' },
+      { code: 'DC8', price: 750, label: 'DC8 ₹750/-', image: '/images/combos/birthday/DC8.jpeg' },
+      { code: 'DC9', price: 885, label: 'DC9 ₹885/-', image: '/images/combos/birthday/DC9.jpeg' }
     ],
     includes: [],
     active: true
@@ -200,12 +154,37 @@ export const DEFAULT_COMBOS: ComboItem[] = [
     description: 'Romantic celebration setup with rose petal spread & photo frames',
     price: 420,
     driveUrl: 'https://drive.google.com/file/d/1WP82RU9hDGRZ7VgnOZ68W4xRyqW1CtZp/view?usp=drivesdk',
+    image: '/images/combos/anniversary/cover.jpeg',
     popular: true,
     options: [
-      { code: 'AC1', price: 420, label: 'AC1 ₹420/-' },
-      { code: 'AC2', price: 570, label: 'AC2 ₹570/-' },
-      { code: 'AC3', price: 460, label: 'AC3 ₹460/-' },
-      { code: 'AC4', price: 440, label: 'AC4 ₹440/-' }
+      { code: 'AC1', price: 420, label: 'AC1 ₹420/-', image: '/images/combos/anniversary/AC1.jpeg' },
+      { code: 'AC2', price: 570, label: 'AC2 ₹570/-', image: '/images/combos/anniversary/AC2.jpeg' },
+      { code: 'AC3', price: 460, label: 'AC3 ₹460/-', image: '/images/combos/anniversary/AC3.jpeg' },
+      { code: 'AC4', price: 440, label: 'AC4 ₹440/-', image: '/images/combos/anniversary/AC4.jpeg' },
+      { code: 'AC5', price: 590, label: 'AC5 ₹590/-', image: '/images/combos/anniversary/AC5.jpeg' }
+    ],
+    includes: [],
+    active: true
+  },
+  {
+    id: 'bride_to_be_combo',
+    name: 'Bride to Be Combo',
+    category: 'Bride to Be',
+    description: 'Glamorous bachelorette & bridal party accessory set',
+    price: 480,
+    driveUrl: 'https://drive.google.com/file/d/1QhuG5mnaGMxpRQ8qhmSt9NUXUb4gL-NI/view?usp=drivesdk',
+    image: '/images/combos/bride/cover.jpeg',
+    options: [
+      { code: 'BC1', price: 480, label: 'BC1 ₹480/-', image: '/images/combos/bride/BC1.jpeg' },
+      { code: 'BC2', price: 520, label: 'BC2 ₹520/-', image: '/images/combos/bride/BC2.jpeg' },
+      { code: 'BC3', price: 560, label: 'BC3 ₹560/-', image: '/images/combos/bride/BC3.jpeg' },
+      { code: 'BC4', price: 590, label: 'BC4 ₹590/-', image: '/images/combos/bride/BC4.jpeg' },
+      { code: 'BC5', price: 640, label: 'BC5 ₹640/-', image: '/images/combos/bride/BC5.jpeg' },
+      { code: 'BC6', price: 690, label: 'BC6 ₹690/-', image: '/images/combos/bride/BC6.jpeg' },
+      { code: 'BC7', price: 1190, label: 'BC7 ₹1190/-', image: '/images/combos/bride/BC7.jpeg' },
+      { code: 'BC8', price: 980, label: 'BC8 ₹980/-', image: '/images/combos/bride/BC8.jpeg' },
+      { code: 'BC9', price: 770, label: 'BC9 ₹770/-', image: '/images/combos/bride/BC9.jpeg' },
+      { code: 'BC10', price: 740, label: 'BC10 ₹740/-', image: '/images/combos/bride/BC10.jpeg' }
     ],
     includes: [],
     active: true
@@ -215,22 +194,45 @@ export const DEFAULT_COMBOS: ComboItem[] = [
     name: 'Groom to be Combo',
     category: 'Groom to Be',
     description: 'Festive toast & bachelor party pack celebrating the groom',
-    price: 455,
+    price: 590,
     driveUrl: 'https://drive.google.com/file/d/1GHrVcKjuHcITCqQy_Hzy74Z_Mc-TYinM/view?usp=drivesdk',
+    image: '/images/combos/groom/cover.jpeg',
     options: [
-      { code: 'GC1', price: 590, label: 'GC1 ₹590/-' },
-      { code: 'GC2', price: 455, label: 'GC2 ₹455/-' },
-      { code: 'GC3', price: 490, label: 'GC3 ₹490/-' },
-      { code: 'GC4', price: 625, label: 'GC4 ₹625/-' },
-      { code: 'GC5', price: 975, label: 'GC5 ₹975/-' },
-      { code: 'GC6', price: 690, label: 'GC6 ₹690/-' },
-      { code: 'GC7', price: 655, label: 'GC7 ₹655/-' },
-      { code: 'GC8', price: 1000, label: 'GC8 ₹1000/-' }
+      { code: 'GC1', price: 590, label: 'GC1 ₹590/-', image: '/images/combos/groom/GC1.jpeg' },
+      { code: 'GC2', price: 455, label: 'GC2 ₹455/-', image: '/images/combos/groom/GC2.jpeg' },
+      { code: 'GC3', price: 490, label: 'GC3 ₹490/-', image: '/images/combos/groom/GC3.jpeg' },
+      { code: 'GC4', price: 625, label: 'GC4 ₹625/-', image: '/images/combos/groom/GC4.jpeg' },
+      { code: 'GC5', price: 975, label: 'GC5 ₹975/-', image: '/images/combos/groom/GC5.jpeg' },
+      { code: 'GC6', price: 690, label: 'GC6 ₹690/-', image: '/images/combos/groom/GC6.jpeg' },
+      { code: 'GC7', price: 655, label: 'GC7 ₹655/-', image: '/images/combos/groom/GC7.jpeg' },
+      { code: 'GC8', price: 1000, label: 'GC8 ₹1000/-', image: '/images/combos/groom/GC8.jpeg' },
+      { code: 'GC9', price: 580, label: 'GC9 ₹580/-', image: '/images/combos/groom/GC9.jpeg' }
+    ],
+    includes: [],
+    active: true
+  },
+  {
+    id: 'mom_to_be_combo',
+    name: 'Mom to Be Combo',
+    category: 'Mom to Be',
+    description: 'Special celebratory package tailored for baby shower surprises',
+    price: 730,
+    driveUrl: 'https://drive.google.com/file/d/1QaY5pqtC4KaQW3fdatM5pYWnmTlrZOoX/view?usp=drive_link',
+    image: '/images/combos/mom/cover.jpeg',
+    options: [
+      { code: 'MC1', price: 730, label: 'MC1 ₹730/-', image: '/images/combos/mom/MC1.jpeg' },
+      { code: 'MC2', price: 420, label: 'MC2 ₹420/-', image: '/images/combos/mom/MC2.jpeg' },
+      { code: 'MC3', price: 440, label: 'MC3 ₹440/-', image: '/images/combos/mom/MC3.jpeg' },
+      { code: 'MC4', price: 450, label: 'MC4 ₹450/-', image: '/images/combos/mom/MC4.jpeg' },
+      { code: 'MC5', price: 580, label: 'MC5 ₹580/-', image: '/images/combos/mom/MC5.jpeg' },
+      { code: 'MC6', price: 600, label: 'MC6 ₹600/-', image: '/images/combos/mom/MC6.jpeg' },
+      { code: 'MC7', price: 670, label: 'MC7 ₹670/-', image: '/images/combos/mom/MC7.jpeg' }
     ],
     includes: [],
     active: true
   }
 ];
+
 
 export const STANDARD_TIME_SLOTS = [
   { time: '09:30 AM', endTime: '10:30 AM', period: 'morning' as const },

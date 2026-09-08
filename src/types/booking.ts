@@ -31,6 +31,7 @@ export interface ComboOption {
   code: string;
   price: number;
   label: string;
+  image?: string;
 }
 
 export interface ComboItem {
@@ -40,6 +41,7 @@ export interface ComboItem {
   description: string;
   price: number;
   driveUrl?: string;
+  image?: string;
   options?: ComboOption[];
   includes: string[];
   popular?: boolean;

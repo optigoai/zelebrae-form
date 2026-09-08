@@ -44,3 +44,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Raw documents & PDFs (keep local, do not push to GitHub)
+Docs/
+docs/

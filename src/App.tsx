@@ -45,9 +45,9 @@ export const App: React.FC = () => {
     date: getKolkataToday(),
     timeSlot: '',
     amenities: ['basic_decorations', 'music_mic', 'ac_hall', 'welcome_drink'],
-    combo: 'none',
-    comboPackage: '',
-    comboPrice: 0,
+    combo: 'birthday_combo',
+    comboPackage: 'DC1',
+    comboPrice: 350,
     name: '',
     customerLocation: '',
     countryCode: '+91',
@@ -74,15 +74,39 @@ export const App: React.FC = () => {
   const handleSelectOccasion = (occId: string) => {
     setBookingState(prev => {
       if (prev.occasion === occId) return prev;
+
+      let defaultCombo = 'birthday_combo';
+      let defaultPkg = 'DC1';
+      let defaultPrice = 350;
+
+      if (occId === 'anniversary') {
+        defaultCombo = 'anniversary_combo';
+        defaultPkg = 'AC1';
+        defaultPrice = 420;
+      } else if (occId === 'bride_to_be') {
+        defaultCombo = 'bride_to_be_combo';
+        defaultPkg = 'BC1';
+        defaultPrice = 480;
+      } else if (occId === 'groom_to_be') {
+        defaultCombo = 'groom_to_be_combo';
+        defaultPkg = 'GC1';
+        defaultPrice = 590;
+      } else if (occId === 'mom_to_be') {
+        defaultCombo = 'mom_to_be_combo';
+        defaultPkg = 'MC1';
+        defaultPrice = 730;
+      }
+
       return {
         ...prev,
         occasion: occId,
-        combo: 'none',
-        comboPackage: undefined,
-        comboPrice: 0
+        combo: defaultCombo,
+        comboPackage: defaultPkg,
+        comboPrice: defaultPrice
       };
     });
   };
+
 
   const handleChangeCustomOccasion = (val: string) => {
     setBookingState(prev => ({ ...prev, customOccasion: val }));
@@ -273,9 +297,9 @@ export const App: React.FC = () => {
       date: getKolkataToday(),
       timeSlot: '',
       amenities: ['basic_decorations', 'music_mic', 'ac_hall', 'welcome_drink'],
-      combo: 'none',
-      comboPackage: '',
-      comboPrice: 0,
+      combo: 'birthday_combo',
+      comboPackage: 'DC1',
+      comboPrice: 350,
       name: '',
       customerLocation: '',
       countryCode: '+91',

@@ -50,14 +50,26 @@ export const ComboMenuModal: React.FC<ComboMenuModalProps> = ({
                   backgroundColor: selectedComboId === combo.id ? '#FAF5FD' : '#FFFFFF'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
-                  <h4 style={{ color: 'var(--color-brand-purple)', fontSize: '1.05rem', fontWeight: 700 }}>
-                    {combo.name}
-                  </h4>
-                  <span style={{ fontWeight: 800, color: 'var(--color-brand-purple)', fontSize: '1.1rem' }}>
-                    ₹{combo.price}
-                  </span>
+                <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                  {combo.image && (
+                    <img
+                      src={combo.image}
+                      alt={combo.name}
+                      style={{ width: '55px', height: '55px', objectFit: 'cover', borderRadius: 'var(--radius-md)', flexShrink: 0, border: '1px solid var(--color-border-card)' }}
+                    />
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <h4 style={{ color: 'var(--color-brand-purple)', fontSize: '1.02rem', fontWeight: 700, margin: 0 }}>
+                        {combo.name}
+                      </h4>
+                      <span style={{ fontWeight: 800, color: 'var(--color-brand-purple)', fontSize: '1.05rem' }}>
+                        ₹{combo.price}
+                      </span>
+                    </div>
+                  </div>
                 </div>
+
 
                 <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', marginBottom: '0.65rem' }}>
                   {combo.description}

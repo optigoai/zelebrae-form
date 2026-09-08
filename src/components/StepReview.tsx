@@ -132,21 +132,33 @@ export const StepReview: React.FC<StepReviewProps> = ({
               <span className="review-label">Add-ons & Celebration Combo</span>
               <div style={{ marginTop: '0.3rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                 {currentCombo && currentCombo.id !== 'none' ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                    <Gift size={15} color="#D97706" />
-                    <span style={{ fontWeight: 700, color: 'var(--color-brand-purple)', fontSize: '0.92rem' }}>
-                      {currentCombo.name}
-                      {state.comboPackage ? ` — ${state.comboPackage}` : ''}
-                    </span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>
-                      (+₹{state.comboPrice || currentCombo.price})
-                    </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    {(currentCombo.options?.find(o => o.code === state.comboPackage)?.image || currentCombo.image) && (
+                      <img
+                        src={currentCombo.options?.find(o => o.code === state.comboPackage)?.image || currentCombo.image}
+                        alt={currentCombo.name}
+                        style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-card)', flexShrink: 0 }}
+                      />
+                    )}
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                        <Gift size={14} color="#D97706" />
+                        <span style={{ fontWeight: 700, color: 'var(--color-brand-purple)', fontSize: '0.92rem' }}>
+                          {currentCombo.name}
+                          {state.comboPackage ? ` — ${state.comboPackage}` : ''}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>
+                        +₹{state.comboPrice || currentCombo.price}
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
                     No Party Combo selected
                   </span>
                 )}
+
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.2rem' }}>
                   {selectedAmenityObjects.map((a) => (
