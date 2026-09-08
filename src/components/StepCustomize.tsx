@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Sparkles, Gift, Check, ExternalLink, ZoomIn, X } from 'lucide-react';
+import { Sparkles, Check, ExternalLink, ZoomIn, X } from 'lucide-react';
 import { Amenity, ComboItem } from '../types/booking';
 import { AmenityIcon } from './CelebrationIcon';
 
@@ -71,7 +71,7 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
   combos,
   selectedCombo,
   selectedPackage,
-  selectedPrice,
+  selectedPrice: _selectedPrice,
   onSelectCombo,
   onSelectPackage,
   menuPdfUrl = COMBO_MENU_DRIVE_URL
@@ -102,6 +102,7 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
     }
   }, [previewImage]);
 
+
   return (
     <div className="animate-fade-in customization-section">
       <div className="step-header">
@@ -110,227 +111,168 @@ export const StepCustomize: React.FC<StepCustomizeProps> = ({
           Step 4 of 5
         </span>
         <h1 className="step-title">Party Accessories & Combos</h1>
-
       </div>
 
       {/* ===================================================================
-          Section 1: Party Accessories & Combos (At Top for Zero-Scroll)
+          Section 1: Horizontal Scrolling Combo Cards (Image & Rate Only)
           =================================================================== */}
       <div className="combos-section-wrap">
-        <div className="section-block-title" style={{ marginBottom: '0.45rem' }}>
-          <div>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '1.05rem' }}>
-              <Gift size={16} color="#592F7C" />
-              Party Accessories & Combos
-            </h3>
-          </div>
-        </div>
+        {filteredCombos.map((combo) => {
+          const isSelected = selectedCombo === combo.id;
+          const currentPkgCode = isSelected ? (selectedPackage || combo.options?.[0]?.code) : combo.options?.[0]?.code;
+          const comboDriveUrl = combo.driveUrl || driveUrl;
 
-        <div className="combos-list" role="radiogroup" aria-label="Party Combos">
-          {filteredCombos.map((combo) => {
-            const isSelected = selectedCombo === combo.id;
-            const currentPkgCode = isSelected ? (selectedPackage || combo.options?.[0]?.code) : combo.options?.[0]?.code;
-            const currentOption = combo.options?.find(o => o.code === currentPkgCode) || combo.options?.[0];
-            const currentPrice = isSelected && selectedPrice !== undefined ? selectedPrice : (currentOption?.price ?? combo.price);
-            const comboDriveUrl = combo.driveUrl || driveUrl;
-
-            // Determine image to display on the side of the combo option
-            const currentImage = currentOption?.image || combo.image || '/images/combos/birthday/cover.jpeg';
-
-            return (
-              <div
-                key={combo.id}
-                className={`combo-card ${isSelected ? 'selected' : ''}`}
-                onClick={() => {
-                  const firstOpt = combo.options && combo.options.length > 0 ? combo.options[0] : undefined;
-                  onSelectCombo(combo.id, currentPkgCode || firstOpt?.code, currentPrice || firstOpt?.price || combo.price);
-                }}
-                role="radio"
-                aria-checked={isSelected}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    const firstOpt = combo.options && combo.options.length > 0 ? combo.options[0] : undefined;
-                    onSelectCombo(combo.id, currentPkgCode || firstOpt?.code, currentPrice || firstOpt?.price || combo.price);
-                  }
-                }}
-              >
-                {combo.popular && (
-                  <span className="combo-popular-badge">
-                    Most Popular
-                  </span>
+          return (
+            <div key={combo.id} className="combo-theme-block">
+              <div className="combo-theme-header">
+                <h2 className="combo-theme-title">{combo.name}</h2>
+                {comboDriveUrl && (
+                  <a
+                    href={comboDriveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="combo-view-menu-btn"
+                    onClick={(e) => e.stopPropagation()}
+                    title={`Open full ${combo.name} PDF in Google Drive`}
+                  >
+                    <span>View Combo</span>
+                    <ExternalLink size={12} />
+                  </a>
                 )}
+              </div>
 
-                <div className="combo-card-layout">
-                  {/* Top Row: Side Image Preview & Details */}
-                  <div className="combo-card-top">
-                    {/* Side Image Preview Thumbnail */}
-                    <div
-                      className="combo-side-image-wrapper"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPreviewImage({
-                          url: currentImage,
-                          title: `${combo.name} (${currentPkgCode || 'Cover'})`,
-                          price: currentPrice,
-                          driveUrl: comboDriveUrl
-                        });
-                      }}
-                      role="button"
-                      tabIndex={0}
-                      aria-label={`View photo for ${combo.name} ${currentPkgCode || ''}`}
-                      title="Click to view full photo setup"
-                    >
+              {/* Combo Visual Cards Grid: Image + Rate Only */}
+              <div className="combo-cards-grid" role="radiogroup" aria-label={combo.name}>
+                {combo.options && combo.options.length > 0 ? (
+                  combo.options.map((opt) => {
+                    const isOptActive = isSelected && currentPkgCode === opt.code;
+                    const optImage = opt.image || combo.image || '/images/combos/birthday/cover.jpeg';
+
+                    return (
+                      <div
+                        key={opt.code}
+                        className={`combo-theme-card ${isOptActive ? 'selected' : ''}`}
+                        onClick={() => {
+                          onSelectCombo(combo.id, opt.code, opt.price);
+                          onSelectPackage(opt.code, opt.price);
+                        }}
+                        role="radio"
+                        aria-checked={isOptActive}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onSelectCombo(combo.id, opt.code, opt.price);
+                            onSelectPackage(opt.code, opt.price);
+                          }
+                        }}
+                      >
+                        {isOptActive && (
+                          <div className="combo-theme-card-badge">
+                            <Check size={12} strokeWidth={3} />
+                          </div>
+                        )}
+
+                        <div className="combo-theme-card-media">
+                          <img
+                            src={optImage}
+                            alt={opt.code}
+                            className="combo-theme-card-img"
+                            loading="lazy"
+                          />
+                          <button
+                            type="button"
+                            className="combo-theme-zoom-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewImage({
+                                url: optImage,
+                                title: `${opt.code} (₹${opt.price})`,
+                                price: opt.price,
+                                driveUrl: comboDriveUrl
+                              });
+                            }}
+                            aria-label={`Zoom ${opt.code}`}
+                            title="Tap to zoom"
+                          >
+                            <ZoomIn size={13} />
+                          </button>
+                        </div>
+
+                        <div className="combo-theme-card-info">
+                          <span className="combo-theme-code">{opt.code}</span>
+                          <span className="combo-theme-rate">₹{opt.price}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div
+                    className={`combo-theme-card ${isSelected ? 'selected' : ''}`}
+                    onClick={() => onSelectCombo(combo.id, undefined, combo.price)}
+                    role="radio"
+                    aria-checked={isSelected}
+                    tabIndex={0}
+                  >
+                    {isSelected && (
+                      <div className="combo-theme-card-badge">
+                        <Check size={12} strokeWidth={3} />
+                      </div>
+                    )}
+                    <div className="combo-theme-card-media">
                       <img
-                        src={currentImage}
-                        alt={`${combo.name} ${currentPkgCode || ''}`}
-                        className="combo-side-image"
+                        src={combo.image}
+                        alt={combo.name}
+                        className="combo-theme-card-img"
                         loading="lazy"
                       />
-                      <div className="combo-image-zoom-badge">
-                        <ZoomIn size={12} />
-                        <span>View</span>
-                      </div>
                     </div>
-
-                    {/* Details Section */}
-                    <div className="combo-details-area">
-                      <div className="combo-header">
-                        <div className="combo-title-area">
-                          <div className="radio-circle">
-                            {isSelected && <div className="radio-inner-dot" />}
-                          </div>
-                          <span className="combo-name">{combo.name}</span>
-                        </div>
-
-                        <div className="combo-actions-area">
-                          {comboDriveUrl && (
-                            <a
-                              href={comboDriveUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="combo-view-menu-btn"
-                              onClick={(e) => e.stopPropagation()}
-                              title={`Open full ${combo.name} PDF menu in Google Drive`}
-                            >
-                              <span>View Menu</span>
-                              <ExternalLink size={12} />
-                            </a>
-                          )}
-
-                          <span className="combo-price">₹{currentPrice}</span>
-                        </div>
-                      </div>
-
-                      <p className="combo-desc">{combo.description}</p>
+                    <div className="combo-theme-card-info">
+                      <span className="combo-theme-code">{combo.name}</span>
+                      <span className="combo-theme-rate">₹{combo.price}</span>
                     </div>
                   </div>
-
-                  {/* Package Variant Pills Grid (Spanning FULL WIDTH under image and details) */}
-                  {combo.options && combo.options.length > 0 && (
-                    <div className="combo-variants-wrapper" onClick={(e) => e.stopPropagation()}>
-                      <div className="combo-variants-header">
-                        <span className="combo-variants-title">
-                          <span className="required-star">*</span> Select Package Variant:
-                        </span>
-                      </div>
-                      <div className="combo-variants-pills-grid">
-                        {combo.options.map((opt) => {
-                          const isOptActive = isSelected && currentPkgCode === opt.code;
-                          return (
-                            <button
-                              key={opt.code}
-                              type="button"
-                              className={`combo-variant-pill ${isOptActive ? 'active' : ''}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSelectCombo(combo.id, opt.code, opt.price);
-                                onSelectPackage(opt.code, opt.price);
-                              }}
-                              title={`Select ${opt.label || `${opt.code} ₹${opt.price}`}`}
-                            >
-                              {opt.image && (
-                                <img
-                                  src={opt.image}
-                                  alt={opt.code}
-                                  className="combo-variant-mini-thumb"
-                                  loading="lazy"
-                                />
-                              )}
-                              <span className="combo-variant-code">{opt.code}</span>
-                              <span className="combo-variant-price">₹{opt.price}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {combo.includes && combo.includes.length > 0 && (
-                    <div className="combo-items-pills">
-                      {combo.includes.map((item, idx) => (
-                        <span key={idx} className="combo-item-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                          <Check size={12} strokeWidth={2.5} color="#592F7C" />
-                          <span>{item}</span>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* ===================================================================
-          Section 2: Included Amenities (Compact 2-Column at Bottom)
+          Section 2: Included Amenities (Compact & Cohesive Perks Card)
           =================================================================== */}
-      <div className="amenities-section-wrap" style={{ marginTop: '0.4rem' }}>
-        <div className="section-block-title" style={{ marginBottom: '0.45rem' }}>
-          <div>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '1.05rem' }}>
-              <Sparkles size={16} color="#592F7C" />
-              Included Amenities
-              <span className="complimentary-pill" style={{ marginLeft: '0.35rem' }}>Complimentary</span>
-            </h3>
+      <div className="amenities-perks-container">
+        <div className="amenities-perks-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span className="amenities-perks-title">Complimentary With Your Booking:</span>
           </div>
         </div>
 
-        <div className="amenities-list">
+        <div className="amenities-perks-grid">
           {amenities.map((amenity) => {
             const isSelected = selectedAmenities.includes(amenity.id);
 
             return (
-              <div
+              <button
                 key={amenity.id}
-                className={`amenity-card ${isSelected ? 'selected' : ''}`}
+                type="button"
+                className={`amenity-perk-chip ${isSelected ? 'selected' : ''}`}
                 onClick={() => onToggleAmenity(amenity.id)}
                 role="checkbox"
                 aria-checked={isSelected}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onToggleAmenity(amenity.id);
-                  }
-                }}
+                title={`Click to toggle ${amenity.name}`}
               >
-                <div className="amenity-icon" aria-hidden="true">
-                  <AmenityIcon iconName={amenity.icon} size={17} />
+                <div className="amenity-perk-icon" aria-hidden="true">
+                  <AmenityIcon iconName={amenity.icon} size={13} />
                 </div>
 
-                <div className="amenity-content">
-                  <div className="amenity-title-row">
-                    <span className="amenity-title">{amenity.name}</span>
-                  </div>
-                </div>
+                <span className="amenity-perk-name">{amenity.name}</span>
 
-                <div className="custom-checkbox">
-                  {isSelected && <Check size={13} strokeWidth={3} />}
+                <div className="amenity-perk-check">
+                  {isSelected && <Check size={10} strokeWidth={3} />}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

@@ -963,28 +963,29 @@
 .amenities-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 @media (min-width: 640px) {
   .amenities-list {
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.65rem;
+    gap: 0.5rem;
   }
 }
 
 .amenity-card {
   background-color: #FFFFFF;
   border: 1.5px solid var(--color-border-card);
-  border-radius: var(--radius-md);
-  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  padding: 0.35rem 0.55rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   cursor: pointer;
   transition: all var(--transition-normal);
   user-select: none;
-  min-height: 48px;
+  min-height: 38px;
+  box-sizing: border-box;
 }
 
 .amenity-card:hover {
@@ -997,10 +998,10 @@
 }
 
 .amenity-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background-color: var(--color-pastel-lilac-soft);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background-color: var(--color-pastel-lilac);
   color: var(--color-brand-purple);
   display: flex;
   align-items: center;
@@ -1018,36 +1019,21 @@
 .amenity-card.selected .amenity-icon {
   background-color: var(--color-brand-purple);
   color: #FFFFFF;
-  box-shadow: 0 3px 8px rgba(89, 47, 124, 0.2);
-}
-
-.amenity-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.amenity-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0;
 }
 
 .amenity-title {
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--color-text-primary);
-  line-height: 1.25;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
 .amenity-card.selected .amenity-title {
   color: var(--color-brand-purple);
-}
-
-.amenity-desc {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  line-height: 1.35;
 }
 
 .complimentary-pill {
@@ -1059,16 +1045,10 @@
   border-radius: var(--radius-full);
 }
 
-.amenity-price {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-accent-gold);
-}
-
 .custom-checkbox {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
   border: 1.5px solid var(--color-border-card);
   display: flex;
   align-items: center;
@@ -1076,7 +1056,7 @@
   color: #FFFFFF;
   background-color: #FFFFFF;
   flex-shrink: 0;
-  margin-top: 0;
+  margin-left: auto;
 }
 
 .amenity-card.selected .custom-checkbox {
@@ -1084,179 +1064,147 @@
   border-color: var(--color-brand-purple);
 }
 
-/* Combos List */
-.combos-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.combo-card {
-  background-color: #FFFFFF;
-  border: 1.5px solid var(--color-border-card);
+/* Amenities Complimentary Perks Card */
+.amenities-perks-container {
+  background: linear-gradient(135deg, #FAF5FF 0%, #FFFFFF 100%);
+  border: 1.5px solid rgba(89, 47, 124, 0.16);
   border-radius: var(--radius-lg);
-  padding: 0.85rem;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  position: relative;
-  overflow: visible;
-}
-
-.combo-card:hover {
-  border-color: var(--color-brand-purple-light);
-  transform: translateY(-1px);
-}
-
-.combo-card.selected {
-  border-color: var(--color-brand-purple);
-  background-color: var(--color-pastel-lilac-soft);
-  box-shadow: 0 4px 16px var(--color-brand-purple-glow);
-}
-
-.combo-popular-badge {
-  position: absolute;
-  top: -10px;
-  right: 1.25rem;
-  background: linear-gradient(135deg, var(--color-brand-purple), var(--color-brand-rose));
-  color: #FFFFFF;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.2rem 0.65rem;
-  border-radius: var(--radius-full);
-  box-shadow: 0 2px 6px rgba(89, 47, 124, 0.3);
-  z-index: 2;
-}
-
-/* Combo Card Layout: Top Row (Image + Details) & Bottom Full-Width Pills */
-.combo-card-layout {
+  padding: 0.55rem 0.75rem;
+  margin-top: 0.4rem;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  width: 100%;
+  gap: 0.45rem;
+  box-shadow: 0 2px 8px rgba(89, 47, 124, 0.04);
 }
 
-.combo-card-top {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
-  width: 100%;
-}
-
-.combo-side-image-wrapper {
-  position: relative;
-  width: 105px;
-  height: 120px;
-  min-width: 105px;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  border: 1.5px solid var(--color-border-card);
-  box-shadow: 0 4px 12px rgba(89, 47, 124, 0.08);
-  background: #FDF4F6;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all var(--transition-fast);
-}
-
-.combo-side-image-wrapper:hover {
-  transform: scale(1.02);
-  border-color: var(--color-brand-purple);
-  box-shadow: 0 6px 18px rgba(89, 47, 124, 0.2);
-}
-
-.combo-side-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-  transition: transform var(--transition-fast);
-}
-
-.combo-side-image-wrapper:hover .combo-side-image {
-  transform: scale(1.03);
-}
-
-.combo-image-zoom-badge {
-  position: absolute;
-  bottom: 6px;
-  right: 6px;
-  background: rgba(89, 47, 124, 0.85);
-  backdrop-filter: blur(4px);
-  color: #FFFFFF;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.18rem 0.45rem;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  pointer-events: none;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.combo-details-area {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.combo-header {
+.amenities-perks-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.35rem;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
-.combo-title-area {
+.amenities-perks-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--color-brand-purple);
+  letter-spacing: 0.01em;
+}
+
+.amenities-perks-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.35rem;
+}
+
+@media (min-width: 640px) {
+  .amenities-perks-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+}
+
+.amenity-perk-chip {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  flex: 1;
-  min-width: 140px;
+  gap: 0.4rem;
+  background: #FFFFFF;
+  border: 1.2px solid rgba(89, 47, 124, 0.15);
+  border-radius: var(--radius-full);
+  padding: 0.28rem 0.55rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
 }
 
-.radio-circle {
+.amenity-perk-chip:hover {
+  border-color: var(--color-brand-purple);
+  background: var(--color-pastel-lilac-soft);
+}
+
+.amenity-perk-chip.selected {
+  border-color: var(--color-brand-purple);
+  background: var(--color-pastel-lilac-soft);
+}
+
+.amenity-perk-icon {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 2px solid var(--color-border-card);
+  background: var(--color-pastel-lilac);
+  color: var(--color-brand-purple);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.combo-card.selected .radio-circle {
-  border-color: var(--color-brand-purple);
+.amenity-perk-chip.selected .amenity-perk-icon {
+  background: var(--color-brand-purple);
+  color: #FFFFFF;
 }
 
-.radio-inner-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background-color: var(--color-brand-purple);
-}
-
-.combo-name {
-  font-size: 1.05rem;
+.amenity-perk-name {
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
-.combo-card.selected .combo-name {
+.amenity-perk-chip.selected .amenity-perk-name {
   color: var(--color-brand-purple);
 }
 
-.combo-actions-area {
+.amenity-perk-check {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border-card);
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  justify-content: center;
+  color: #FFFFFF;
+  background: #FFFFFF;
   flex-shrink: 0;
+  margin-left: auto;
+}
+
+.amenity-perk-chip.selected .amenity-perk-check {
+  background: var(--color-brand-purple);
+  border-color: var(--color-brand-purple);
+}
+
+/* ==========================================================================
+   Horizontal Scrolling Combo Cards (Image & Rate Only)
+   ========================================================================== */
+.combos-section-wrap {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.combo-theme-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.combo-theme-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.2rem;
+}
+
+.combo-theme-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-brand-purple);
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .combo-view-menu-btn {
@@ -1267,135 +1215,163 @@
   font-weight: 700;
   color: var(--color-brand-purple);
   background-color: #FFFFFF;
-  border: 1px solid rgba(89, 47, 124, 0.3);
+  border: 1.2px solid rgba(89, 47, 124, 0.25);
   padding: 0.22rem 0.6rem;
   border-radius: var(--radius-full);
   text-decoration: none;
   transition: all var(--transition-fast);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .combo-view-menu-btn:hover {
   background-color: var(--color-brand-purple);
   color: #FFFFFF;
   border-color: var(--color-brand-purple);
-  transform: translateY(-1px);
 }
 
-.combo-price {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--color-brand-purple);
-}
-
-.combo-free {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-brand-purple);
-}
-
-.combo-desc {
-  font-size: 0.82rem;
-  color: var(--color-text-muted);
-  margin: 0.2rem 0 0.6rem 0;
-  line-height: 1.45;
-}
-
-/* Package Variant Pills Grid (Full width wrapped pills view across card) */
-.combo-variants-wrapper {
-  margin: 0.15rem 0 0.35rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  width: 100%;
-}
-
-.combo-variants-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem;
-}
-
-.combo-variants-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.combo-variants-title .required-star {
-  color: #DC2626;
-  font-weight: 800;
-}
-
-.combo-variants-pills-grid {
+/* ==========================================================================
+   Combo Grid Layout (2 Images Horizontally Per Row: Image + Rate Only)
+   ========================================================================== */
+.combo-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
-  gap: 0.4rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
   width: 100%;
 }
 
-.combo-variant-pill,
-.combo-variant-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+@media (min-width: 600px) {
+  .combo-cards-grid {
+    gap: 0.85rem;
+  }
+}
+
+/* Individual Combo Theme Card */
+.combo-theme-card {
+  position: relative;
+  width: 100%;
   background: #FFFFFF;
-  border: 1.5px solid rgba(89, 47, 124, 0.2);
+  border: 1.5px solid rgba(89, 47, 124, 0.16);
   border-radius: var(--radius-md);
-  padding: 0.28rem 0.48rem 0.28rem 0.28rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
+  overflow: hidden;
   cursor: pointer;
   transition: all var(--transition-fast);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  user-select: none;
   box-sizing: border-box;
 }
 
-.combo-variant-pill:hover,
-.combo-variant-chip:hover {
+.combo-theme-card:hover {
+  border-color: var(--color-brand-purple-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(89, 47, 124, 0.14);
+}
+
+.combo-theme-card.selected {
   border-color: var(--color-brand-purple);
-  background: var(--color-pastel-lilac-soft);
+  border-width: 2px;
+  background: #FAF5FF;
+  box-shadow: 0 4px 16px rgba(89, 47, 124, 0.25);
   transform: translateY(-1px);
 }
 
-.combo-variant-pill.active,
-.combo-variant-chip.active {
-  border-color: var(--color-brand-purple);
+/* Active Check Badge on Top Left */
+.combo-theme-card-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   background: var(--color-brand-purple);
   color: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(89, 47, 124, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.28);
 }
 
-.combo-variant-mini-thumb {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
+/* Card Photo Media */
+.combo-theme-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #FDF4F6;
+  overflow: hidden;
+}
+
+.combo-theme-card-img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  flex-shrink: 0;
+  object-position: center;
+  display: block;
+  transition: transform var(--transition-fast);
 }
 
-.combo-variant-code {
+.combo-theme-card:hover .combo-theme-card-img {
+  transform: scale(1.04);
+}
+
+/* Zoom Icon Badge on Bottom Right of Photo */
+.combo-theme-zoom-btn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(20, 5, 30, 0.68);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  transition: all var(--transition-fast);
+}
+
+.combo-theme-zoom-btn:hover {
+  background: var(--color-brand-purple);
+  transform: scale(1.15);
+}
+
+/* Card Footer: Code & Rate ONLY */
+.combo-theme-card-info {
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border-top: 1px solid rgba(89, 47, 124, 0.08);
+}
+
+.combo-theme-card.selected .combo-theme-card-info {
+  background: #FAF5FF;
+  border-top-color: rgba(89, 47, 124, 0.16);
+}
+
+.combo-theme-code {
+  font-size: 0.92rem;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  color: var(--color-brand-purple);
+  letter-spacing: 0.01em;
 }
 
-.combo-variant-price {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  margin-left: auto;
+.combo-theme-rate {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
 }
 
-.combo-variant-pill.active .combo-variant-price,
-.combo-variant-chip.active .combo-variant-price {
-  color: #FDF4F6;
+.combo-theme-card.selected .combo-theme-rate {
+  color: var(--color-brand-purple);
 }
 
 /* Lightbox Photo Preview Modal */
@@ -1546,17 +1522,17 @@
     margin: 0.15rem 0 0.35rem 0;
   }
   .combo-variants-pills-grid {
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.35rem;
   }
   .combo-variant-pill,
   .combo-variant-chip {
-    padding: 0.24rem 0.42rem 0.24rem 0.24rem;
+    padding: 0.26rem 0.38rem 0.26rem 0.28rem;
     font-size: 0.78rem;
   }
   .combo-variant-mini-thumb {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 }
 
