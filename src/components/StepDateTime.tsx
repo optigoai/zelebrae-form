@@ -6,7 +6,8 @@ import {
   formatCelebrationDate,
   isPastDate,
   addDays,
-  normalizeSlotTime
+  normalizeSlotTime,
+  isPastSlot
 } from '../utils/dateUtils';
 import { STANDARD_TIME_SLOTS } from '../config/constants';
 
@@ -50,8 +51,10 @@ export const StepDateTime: React.FC<StepDateTimeProps> = ({
       const res = await bookingApi.fetchAvailableSlots(location, date);
       if (res.success) {
         setAvailableSlots(res.availableSlots || []);
-        // If previously selected slot is no longer available on this date, clear selection
-        if (selectedSlot && !res.availableSlots.includes(selectedSlot)) {
+        // If previously selected slot is no longer available or has passed on this date, clear selection
+        const normSelected = normalizeSlotTime(selectedSlot);
+        const isStillAvailable = (res.availableSlots || []).some(s => normalizeSlotTime(s) === normSelected);
+        if (selectedSlot && (!isStillAvailable || isPastSlot(date, selectedSlot))) {
           onSelectSlot('');
         }
       } else {
@@ -74,6 +77,12 @@ export const StepDateTime: React.FC<StepDateTimeProps> = ({
       onSelectDate(todayStr);
     }
   }, [selectedDate, location]);
+
+  useEffect(() => {
+    if (selectedDate && selectedSlot && isPastSlot(selectedDate, selectedSlot)) {
+      onSelectSlot('');
+    }
+  }, [selectedDate, selectedSlot, onSelectSlot]);
 
   // Calendar generation helpers
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -237,12 +246,14 @@ export const StepDateTime: React.FC<StepDateTimeProps> = ({
           </div>
         )}
 
-        {/* Fully Booked Banner */}
+        {/* Fully Booked / Passed Banner */}
         {!isLoadingSlots && isFullyBooked && (
           <div style={{ padding: '0.85rem 1rem', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 'var(--radius-md)', color: '#991B1B', display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
             <AlertCircle size={18} color="#DC2626" />
             <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-              All slots on {formatCelebrationDate(selectedDate)} are currently booked. Please select another date.
+              {selectedDate === todayStr 
+                ? `All celebration slots for today (${formatCelebrationDate(selectedDate)}) have passed or are booked. Please choose an upcoming date.`
+                : `All slots on ${formatCelebrationDate(selectedDate)} are currently booked. Please select another date.`}
             </span>
           </div>
         )}
@@ -291,6 +302,10 @@ export const StepDateTime: React.FC<StepDateTimeProps> = ({
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#DC2626' }}></span>
                   Booked
                 </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#94A3B8' }}></span>
+                  Passed
+                </span>
               </div>
             </div>
           </div>
@@ -301,14 +316,15 @@ export const StepDateTime: React.FC<StepDateTimeProps> = ({
 
   function renderSlotButton(slot: { time: string; endTime: string }) {
     const slotNorm = normalizeSlotTime(slot.time);
-    const isAvailable = availableSlots.some(s => normalizeSlotTime(s) === slotNorm);
-    const isSelected = normalizeSlotTime(selectedSlot) === slotNorm;
+    const isPast = isPastSlot(selectedDate, slot.time);
+    const isAvailable = !isPast && availableSlots.some(s => normalizeSlotTime(s) === slotNorm);
+    const isSelected = !isPast && normalizeSlotTime(selectedSlot) === slotNorm;
 
     return (
       <button
         key={slot.time}
         type="button"
-        className={`slot-btn ${isSelected ? 'selected' : ''} ${!isAvailable ? 'booked' : ''}`}
+        className={`slot-btn ${isSelected ? 'selected' : ''} ${isPast ? 'passed' : !isAvailable ? 'booked' : ''}`}
         onClick={() => {
           if (isAvailable) {
             onSelectSlot(slot.time);
@@ -317,10 +333,18 @@ export const StepDateTime: React.FC<StepDateTimeProps> = ({
         disabled={!isAvailable}
         aria-pressed={isSelected}
         aria-disabled={!isAvailable}
-        title={isAvailable ? `${slot.time} (Available)` : `${slot.time} (Unavailable / Already Booked)`}
+        title={
+          isPast
+            ? `${slot.time} (Time has passed)`
+            : isAvailable
+            ? `${slot.time} (Available)`
+            : `${slot.time} (Unavailable / Already Booked)`
+        }
       >
         <span className="slot-time">{slot.time}</span>
-        {isAvailable ? (
+        {isPast ? (
+          <span className="slot-booked-badge slot-passed-badge">Passed</span>
+        ) : isAvailable ? (
           <span className="slot-duration">1 hr private slot</span>
         ) : (
           <span className="slot-booked-badge">Booked</span>

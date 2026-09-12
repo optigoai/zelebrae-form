@@ -16,7 +16,10 @@ import {
   AlertCircle, 
   ZoomIn, 
   X,
-  CreditCard
+  CreditCard,
+  ChevronDown,
+  ChevronUp,
+  FileText
 } from 'lucide-react';
 import { compressPaymentImage } from '../utils/imageUtils';
 
@@ -49,6 +52,7 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
   const [isCompressing, setIsCompressing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isQrZoomOpen, setIsQrZoomOpen] = useState(false);
+  const [isPolicyOpen, setIsPolicyOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const upiId = 'pinelabs.stq3698549@pineaxis';
@@ -424,54 +428,103 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
           </div>
         </div>
 
-        {/* Celebration Hall Booking Policy Text */}
-        <div className="booking-policy-text-box" style={{ marginTop: '1.25rem' }}>
-          <h4 className="booking-policy-title">🎉 Celebration Hall Booking Policy</h4>
-          
-          <p>
-            നിങ്ങളുടെ Celebration Hall Booking സ്ഥിരീകരിക്കുന്നതിനായി <strong>₹500 Booking Confirmation Amount</strong> ബുക്കിംഗ് സമയത്ത് അടയ്ക്കേണ്ടതാണ്.
-          </p>
-          <p>
-            ഈ ₹500 Celebration Hall-ന്റെ ചാർജോ അധിക ഫീസോ അല്ല. നിങ്ങൾ തിരഞ്ഞെടുത്ത തീയതിയും സമയവും നിങ്ങളുടെ Celebration-നായി പ്രത്യേകമായി reserve ചെയ്യുന്നതിനുള്ള Booking Confirmation Amount ആണ്.
-          </p>
-          <p>
-            നിങ്ങൾ അടച്ച ₹500 നിങ്ങളുടെ Celebration Day-ലെ <strong>Final Bill-ൽ നിന്ന് പൂർണ്ണമായും കുറയ്ക്കുന്നതാണ്</strong>.
-          </p>
-
-          <h5 className="booking-policy-subtitle">📅 Booking Cancellation / Date Change</h5>
-          <p>
-            ബുക്ക് ചെയ്ത Celebration തീയതിയും സമയവും ആരംഭിക്കുന്നതിന് <strong>കുറഞ്ഞത് 3 മണിക്കൂർ മുമ്പ്</strong> cancellation അറിയിച്ചാൽ, അടച്ച ₹500 പൂർണ്ണമായും refund ചെയ്യുന്നതാണ്.
-          </p>
-          <p>
-            Celebration മറ്റൊരു ദിവസത്തേക്ക് മാറ്റാൻ ആഗ്രഹിക്കുന്നുവെങ്കിൽ, <strong>കുറഞ്ഞത് 3 മണിക്കൂർ മുമ്പ്</strong> അറിയിച്ചാൽ, ലഭ്യമായ മറ്റൊരു തീയതിയിലേക്ക് booking മാറ്റാവുന്നതാണ്. അങ്ങനെ date change ചെയ്യുമ്പോൾ അടച്ച ₹500 നഷ്ടപ്പെടാതെ പുതിയ booking-ലേക്ക് മാറ്റി നൽകുന്നതാണ്.
-          </p>
-          <p>
-            എന്നാൽ, സെലിബ്രേഷൻ ടൈം ന്റെ 3 മണിക്കൂറിന് മുൻപ് cancellation അറിയിക്കുകയോ, booking ചെയ്ത സമയത്ത് Celebration-ന് എത്താതിരിക്കുകയോ ചെയ്താൽ, <strong>₹500 refund ചെയ്യാൻ സാധിക്കില്ല</strong>.
-          </p>
-          <p>
-            ഓരോ booking-നും തിരഞ്ഞെടുത്ത സമയ slot പ്രത്യേകമായി reserve ചെയ്യുന്നതിനാൽ, തീയതിയും സമയവും ഉറപ്പാക്കിയ ശേഷം മാത്രം booking ചെയ്യണമെന്ന് സ്നേഹപൂർവ്വം അഭ്യർത്ഥിക്കുന്നു.
-          </p>
-
-          <h5 className="booking-policy-subtitle">ℹ️ Booking Policy</h5>
-          <p>
-            Booking സംബന്ധിച്ച് ഏതെങ്കിലും പ്രത്യേക സാഹചര്യമോ തർക്കമോ ഉണ്ടായാൽ, <strong>Zelebrae Pastries Management-ന്റെ തീരുമാനം അന്തിമമായിരിക്കും</strong>.
-          </p>
-          <p>
-            നിങ്ങളുടെ Celebration കൂടുതൽ മനോഹരവും സുഗമവുമാക്കുന്നതിനായി ഈ booking policy സഹകരിച്ച് പാലിക്കുമെന്ന് പ്രതീക്ഷിക്കുന്നു. ❤️
-          </p>
-
-          {/* Quick Summary Highlights Box */}
-          <div className="booking-policy-highlights">
-            <div className="booking-policy-highlight-header">
-              ₹500 Booking Confirmation Amount
+        {/* Celebration Hall Booking & Payment Policy Collapsible Section */}
+        <div className={`payment-policy-accordion ${isPolicyOpen ? 'open' : ''}`} style={{ marginTop: '1.25rem' }}>
+          <button
+            type="button"
+            className="payment-policy-trigger"
+            onClick={() => setIsPolicyOpen(prev => !prev)}
+            aria-expanded={isPolicyOpen}
+            aria-controls="payment-policy-body"
+          >
+            <div className="payment-policy-trigger-left">
+              <div className="payment-policy-icon-badge">
+                <FileText size={18} />
+              </div>
+              <div>
+                <div className="payment-policy-trigger-title">
+                  🎉 Celebration Hall Payment & Booking Policy
+                </div>
+                <div className="payment-policy-trigger-subtitle">
+                  ₹500 advance terms, cancellation & refund details • Tap to {isPolicyOpen ? 'hide' : 'read'}
+                </div>
+              </div>
             </div>
-            <ul className="booking-policy-highlight-list">
-              <li>Hall Charge അല്ല</li>
-              <li>Final Bill-ൽ 100% Adjust ചെയ്യാം</li>
-              <li>3 മണിക്കൂർ മുമ്പ് Cancellation → Full Refund</li>
-              <li>3 മണിക്കൂർ മുമ്പ് Date Change → Amount പുതിയ Booking-ലേക്ക് Transfer ചെയ്യാം</li>
-            </ul>
-          </div>
+            <div className="payment-policy-trigger-badge">
+              <span>{isPolicyOpen ? 'Hide Policy' : 'View Policy'}</span>
+              <ChevronDown 
+                size={16} 
+                style={{ 
+                  transform: isPolicyOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
+                  transition: 'transform 0.25s ease' 
+                }} 
+              />
+            </div>
+          </button>
+
+          {isPolicyOpen && (
+            <div id="payment-policy-body" className="payment-policy-content animate-fade-in">
+              <h4 className="booking-policy-title">🎉 Celebration Hall Booking Policy</h4>
+              
+              <p>
+                നിങ്ങളുടെ Celebration Hall Booking സ്ഥിരീകരിക്കുന്നതിനായി <strong>₹500 Booking Confirmation Amount</strong> ബുക്കിംഗ് സമയത്ത് അടയ്ക്കേണ്ടതാണ്.
+              </p>
+              <p>
+                ഈ ₹500 Celebration Hall-ന്റെ ചാർജോ അധിക ഫീസോ അല്ല. നിങ്ങൾ തിരഞ്ഞെടുത്ത തീയതിയും സമയവും നിങ്ങളുടെ Celebration-നായി പ്രത്യേകമായി reserve ചെയ്യുന്നതിനുള്ള Booking Confirmation Amount ആണ്.
+              </p>
+              <p>
+                നിങ്ങൾ അടച്ച ₹500 നിങ്ങളുടെ Celebration Day-ലെ <strong>Final Bill-ൽ നിന്ന് പൂർണ്ണമായും കുറയ്ക്കുന്നതാണ്</strong>.
+              </p>
+
+              <h5 className="booking-policy-subtitle">📅 Booking Cancellation / Date Change</h5>
+              <p>
+                ബുക്ക് ചെയ്ത Celebration തീയതിയും സമയവും ആരംഭിക്കുന്നതിന് <strong>കുറഞ്ഞത് 3 മണിക്കൂർ മുമ്പ്</strong> cancellation അറിയിച്ചാൽ, അടച്ച ₹500 പൂർണ്ണമായും refund ചെയ്യുന്നതാണ്.
+              </p>
+              <p>
+                Celebration മറ്റൊരു ദിവസത്തേക്ക് മാറ്റാൻ ആഗ്രഹിക്കുന്നുവെങ്കിൽ, <strong>കുറഞ്ഞത് 3 മണിക്കൂർ മുമ്പ്</strong> അറിയിച്ചാൽ, ലഭ്യമായ മറ്റൊരു തീയതിയിലേക്ക് booking മാറ്റാവുന്നതാണ്. അങ്ങനെ date change ചെയ്യുമ്പോൾ അടച്ച ₹500 നഷ്ടപ്പെടാതെ പുതിയ booking-ലേക്ക് മാറ്റി നൽകുന്നതാണ്.
+              </p>
+              <p>
+                എന്നാൽ, സെലിബ്രേഷൻ ടൈം ന്റെ 3 മണിക്കൂറിന് മുൻപ് cancellation അറിയിക്കുകയോ, booking ചെയ്ത സമയത്ത് Celebration-ന് എത്താതിരിക്കുകയോ ചെയ്താൽ, <strong>₹500 refund ചെയ്യാൻ സാധിക്കില്ല</strong>.
+              </p>
+              <p>
+                ഓരോ booking-നും തിരഞ്ഞെടുത്ത സമയ slot പ്രത്യേകമായി reserve ചെയ്യുന്നതിനാൽ, തീയതിയും സമയവും ഉറപ്പാക്കിയ ശേഷം മാത്രം booking ചെയ്യണമെന്ന് സ്നേഹപൂർവ്വം അഭ്യർത്ഥിക്കുന്നു.
+              </p>
+
+              <h5 className="booking-policy-subtitle">ℹ️ Booking Policy</h5>
+              <p>
+                Booking സംബന്ധിച്ച് ഏതെങ്കിലും പ്രത്യേക സാഹചര്യമോ തർക്കമോ ഉണ്ടായാൽ, <strong>Zelebrae Pastries Management-ന്റെ തീരുമാനം അന്തിമമായിരിക്കും</strong>.
+              </p>
+              <p>
+                നിങ്ങളുടെ Celebration കൂടുതൽ മനോഹരവും സുഗമവുമാക്കുന്നതിനായി ഈ booking policy സഹകരിച്ച് പാലിക്കുമെന്ന് പ്രതീക്ഷിക്കുന്നു. ❤️
+              </p>
+
+              {/* Quick Summary Highlights Box */}
+              <div className="booking-policy-highlights">
+                <div className="booking-policy-highlight-header">
+                  ₹500 Booking Confirmation Amount
+                </div>
+                <ul className="booking-policy-highlight-list">
+                  <li>Hall Charge അല്ല</li>
+                  <li>Final Bill-ൽ 100% Adjust ചെയ്യാം</li>
+                  <li>3 മണിക്കൂർ മുമ്പ് Cancellation → Full Refund</li>
+                  <li>3 മണിക്കൂർ മുമ്പ് Date Change → Amount പുതിയ Booking-ലേക്ക് Transfer ചെയ്യാം</li>
+                </ul>
+              </div>
+
+              {/* Quick collapse footer button */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(89, 47, 124, 0.1)' }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem', gap: '0.35rem' }}
+                  onClick={() => setIsPolicyOpen(false)}
+                >
+                  <ChevronUp size={14} />
+                  <span>Hide Policy</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

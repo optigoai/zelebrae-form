@@ -208,3 +208,22 @@ export function isCancellationAllowed(dateStr: string, timeSlotStr: string): Can
   };
 }
 
+/**
+ * Checks if a celebration slot (dateStr YYYY-MM-DD and timeSlot e.g. "09:30 AM")
+ * has already passed relative to the current time in Asia/Kolkata (IST).
+ */
+export function isPastSlot(dateStr: string, timeSlotStr: string): boolean {
+  if (!dateStr || !timeSlotStr) return false;
+  const today = getKolkataToday();
+  if (dateStr < today) return true;
+  if (dateStr > today) return false;
+
+  // When date is today: parse slot start time in IST (+05:30)
+  const slotDate = parseSlotDateTime(dateStr, timeSlotStr);
+  if (!slotDate) return false;
+
+  // If slot start time has already passed
+  return slotDate.getTime() <= Date.now();
+}
+
+

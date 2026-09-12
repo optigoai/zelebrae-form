@@ -1,6 +1,6 @@
 import { AppConfig, BookingApiResponse, BookingState, AvailabilityResponse, ManageableBooking } from '../types/booking';
 import { DEFAULT_APP_CONFIG, STANDARD_TIME_SLOTS } from '../config/constants';
-import { getKolkataToday, normalizeSlotTime, isCancellationAllowed, addDays } from '../utils/dateUtils';
+import { getKolkataToday, normalizeSlotTime, isCancellationAllowed, addDays, isPastSlot } from '../utils/dateUtils';
 
 const API_ENDPOINT = import.meta.env.VITE_BOOKING_API_URL?.trim() || '';
 
@@ -171,7 +171,7 @@ export const bookingApi = {
       const bookedTimes = new Set(booked.map(b => b.timeSlot));
 
       const availableSlots = STANDARD_TIME_SLOTS
-        .filter(s => !bookedTimes.has(s.time))
+        .filter(s => !bookedTimes.has(s.time) && !isPastSlot(date, s.time))
         .map(s => s.time);
 
       return {
@@ -181,7 +181,7 @@ export const bookingApi = {
         availableSlots,
         allSlots: STANDARD_TIME_SLOTS.map(s => ({
           time: s.time,
-          available: !bookedTimes.has(s.time)
+          available: !bookedTimes.has(s.time) && !isPastSlot(date, s.time)
         }))
       };
     }
@@ -193,7 +193,9 @@ export const bookingApi = {
       if (!res.ok) throw new Error(`Network response error ${res.status}`);
       const data: AvailabilityResponse = await res.json();
       if (data && Array.isArray(data.availableSlots)) {
-        data.availableSlots = data.availableSlots.map(normalizeSlotTime).filter(Boolean);
+        data.availableSlots = data.availableSlots
+          .map(normalizeSlotTime)
+          .filter(slot => Boolean(slot) && !isPastSlot(date, slot));
       }
       return data;
     } catch (err: any) {
@@ -234,6 +236,15 @@ export const bookingApi = {
     if (!API_ENDPOINT) {
       // Realistic simulation with server-side collision check
       await new Promise(r => setTimeout(r, 750));
+
+      // Check if slot time has already passed
+      if (isPastSlot(state.date, state.timeSlot)) {
+        return {
+          success: false,
+          error: 'SLOT_TIME_PASSED',
+          message: 'This celebration time slot has already passed. Please select an upcoming time.'
+        };
+      }
 
       // Simulate lock & race check
       const currentBookings = getStoredMockBookings();

@@ -355,6 +355,40 @@ function doPost(e) {
       });
     }
 
+    // 3b. Check if date or slot has already passed
+    const now = new Date();
+    const todayStr = Utilities.formatDate(now, TIMEZONE, "yyyy-MM-dd");
+    if (date < todayStr) {
+      return jsonResponse({
+        success: false,
+        error: "DATE_IN_PAST",
+        message: "The selected date has already passed. Please choose a future date."
+      });
+    }
+    if (date === todayStr) {
+      const currentHours = parseInt(Utilities.formatDate(now, TIMEZONE, "HH"), 10);
+      const currentMinutes = parseInt(Utilities.formatDate(now, TIMEZONE, "mm"), 10);
+      const currentTotalMinutes = currentHours * 60 + currentMinutes;
+
+      const norm = normalizeSlot(rawTimeSlot);
+      const match = norm.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+      if (match) {
+        let h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const ampm = match[3].toUpperCase();
+        if (ampm === 'AM' && h === 12) h = 0;
+        if (ampm === 'PM' && h !== 12) h += 12;
+        const slotTotalMinutes = h * 60 + m;
+        if (slotTotalMinutes <= currentTotalMinutes) {
+          return jsonResponse({
+            success: false,
+            error: "SLOT_TIME_PASSED",
+            message: "This celebration time slot has already passed. Please select an upcoming time."
+          });
+        }
+      }
+    }
+
     // 4. Double booking collision check in the branch's spreadsheet & master sheet
     const isBooked = isSlotAlreadyBooked(masterSS, rawLocation, date, rawTimeSlot);
     if (isBooked) {
@@ -656,7 +690,35 @@ function computeAvailableSlots(ss, location, date) {
     }
   }
 
-  return configuredSlots.filter(slot => !bookedSlots.has(normalizeSlot(slot)));
+  // 3. Filter out booked slots
+  let available = configuredSlots.filter(slot => !bookedSlots.has(normalizeSlot(slot)));
+
+  // 4. If selected date is today (Asia/Kolkata), filter out slots that have already passed
+  const now = new Date();
+  const todayStr = Utilities.formatDate(now, TIMEZONE, "yyyy-MM-dd");
+  if (date < todayStr) {
+    return [];
+  }
+  if (date === todayStr) {
+    const currentHours = parseInt(Utilities.formatDate(now, TIMEZONE, "HH"), 10);
+    const currentMinutes = parseInt(Utilities.formatDate(now, TIMEZONE, "mm"), 10);
+    const currentTotalMinutes = currentHours * 60 + currentMinutes;
+
+    available = available.filter(slot => {
+      const norm = normalizeSlot(slot);
+      const match = norm.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+      if (!match) return true;
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const ampm = match[3].toUpperCase();
+      if (ampm === 'AM' && h === 12) h = 0;
+      if (ampm === 'PM' && h !== 12) h += 12;
+      const slotTotalMinutes = h * 60 + m;
+      return slotTotalMinutes > currentTotalMinutes;
+    });
+  }
+
+  return available;
 }
 
 /**
