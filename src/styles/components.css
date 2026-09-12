@@ -2231,6 +2231,82 @@
   flex-shrink: 0;
 }
 
+/* Booking Policy Text Container in Advance Deposit Section */
+.booking-policy-text-box {
+  background: #FAF8F6;
+  border: 1px solid rgba(89, 47, 124, 0.14);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.35rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.booking-policy-title {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-brand-purple);
+  margin: 0 0 0.85rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.booking-policy-subtitle {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-brand-purple);
+  margin: 1.1rem 0 0.45rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.booking-policy-text-box p {
+  margin: 0 0 0.65rem 0;
+  color: #374151;
+}
+
+.booking-policy-text-box strong {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+/* Quick Summary Highlights Box */
+.booking-policy-highlights {
+  margin-top: 1rem;
+  background: #FAF5FF;
+  border: 1.5px solid rgba(89, 47, 124, 0.18);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+}
+
+.booking-policy-highlight-header {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--color-brand-purple);
+  margin-bottom: 0.5rem;
+}
+
+.booking-policy-highlight-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  list-style-type: disc;
+}
+
+.booking-policy-highlight-list li {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 0.3rem;
+  line-height: 1.45;
+}
+
+.booking-policy-highlight-list li:last-child {
+  margin-bottom: 0;
+}
+
 /* ==========================================================================
    Guidelines & Generic Modal
    ========================================================================== */
