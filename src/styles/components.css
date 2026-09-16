@@ -1732,6 +1732,10 @@
   border-radius: var(--radius-xl);
   padding: 1.4rem;
   box-shadow: 0 8px 24px rgba(89, 47, 124, 0.06);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .payment-card-header {
@@ -1741,12 +1745,14 @@
   flex-wrap: wrap;
   gap: 0.6rem;
   margin-bottom: 0.85rem;
+  width: 100%;
 }
 
 .payment-title-wrap {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
 }
 
 .payment-badge {
@@ -1770,6 +1776,7 @@
   font-weight: 700;
   color: var(--color-brand-purple);
   margin: 0;
+  line-height: 1.3;
 }
 
 .payment-amount-pill {
@@ -1781,6 +1788,7 @@
   border-radius: var(--radius-full);
   box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
   letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 
 .payment-notice-box {
@@ -1792,6 +1800,8 @@
   border-radius: var(--radius-lg);
   padding: 0.85rem 1rem;
   margin-bottom: 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .payment-notice-icon {
@@ -1804,6 +1814,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  min-width: 0;
 }
 
 .payment-notice-main {
@@ -1822,15 +1833,21 @@
 
 .payment-content-grid {
   display: grid;
-  grid-template-columns: 210px 1fr;
+  grid-template-columns: 210px minmax(0, 1fr);
   gap: 1.35rem;
   align-items: start;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .payment-qr-col {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .payment-qr-card {
@@ -1841,6 +1858,8 @@
   box-shadow: 0 4px 14px rgba(89, 47, 124, 0.08);
   cursor: pointer;
   transition: all var(--transition-fast);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .payment-qr-card:hover {
@@ -1856,6 +1875,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 
 .payment-qr-img {
@@ -1891,12 +1911,15 @@
   border-radius: var(--radius-md);
   padding: 0.45rem 0.65rem;
   gap: 0.4rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .payment-upi-details {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
 }
 
 .payment-upi-label {
@@ -1950,6 +1973,9 @@
 .payment-upload-col {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .payment-dropzone {
@@ -1960,6 +1986,8 @@
   text-align: center;
   cursor: pointer;
   transition: all var(--transition-fast);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .payment-dropzone:hover {
@@ -1978,6 +2006,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.65rem;
+  width: 100%;
 }
 
 .dropzone-icon-circle {
@@ -2022,24 +2051,28 @@
   background: #FFFFFF;
   border: 1.5px solid #059669;
   border-radius: var(--radius-lg);
-  padding: 0.85rem 1rem;
+  padding: 0.75rem 0.85rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.85rem;
+  gap: 0.65rem;
   box-shadow: 0 4px 14px rgba(5, 150, 105, 0.08);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .payment-preview-left {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
   min-width: 0;
+  flex: 1;
 }
 
 .payment-preview-thumb {
-  width: 54px;
-  height: 54px;
+  width: 46px;
+  height: 46px;
   object-fit: cover;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-card);
@@ -2050,25 +2083,29 @@
 .payment-preview-info {
   display: flex;
   flex-direction: column;
-  gap: 0.18rem;
+  gap: 0.15rem;
   min-width: 0;
+  flex: 1;
 }
 
 .payment-preview-tag {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #059669;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.25rem;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .payment-preview-filename {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .payment-preview-actions {
@@ -2080,14 +2117,15 @@
   color: #DC2626;
   border: 1px solid rgba(220, 38, 38, 0.25);
   border-radius: var(--radius-md);
-  padding: 0.35rem 0.65rem;
-  font-size: 0.75rem;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.25rem;
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .payment-remove-btn:hover {
@@ -2107,21 +2145,51 @@
   background: rgba(220, 38, 38, 0.06);
   border-radius: var(--radius-sm);
   border: 1px solid rgba(220, 38, 38, 0.2);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Payment Responsive Media Queries */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .payment-content-grid {
     grid-template-columns: 1fr;
-    gap: 1.1rem;
+    gap: 1.15rem;
+    width: 100%;
   }
   .payment-qr-col {
-    max-width: 220px;
+    max-width: 260px;
     margin: 0 auto;
     width: 100%;
   }
   .payment-card-section {
-    padding: 1.1rem 0.9rem;
+    padding: 1.1rem 0.85rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .payment-title {
+    font-size: 1.02rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-card-section {
+    padding: 0.95rem 0.75rem;
+  }
+  .payment-card-header {
+    gap: 0.4rem;
+  }
+  .payment-preview-card {
+    padding: 0.65rem 0.75rem;
+    gap: 0.5rem;
+  }
+  .payment-preview-thumb {
+    width: 42px;
+    height: 42px;
+  }
+  .payment-remove-btn {
+    padding: 0.3rem 0.45rem;
+    font-size: 0.7rem;
   }
 }
 
@@ -2291,6 +2359,9 @@
   overflow: hidden;
   transition: all var(--transition-normal);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .payment-policy-accordion.open {
@@ -2300,16 +2371,17 @@
 
 .payment-policy-trigger {
   width: 100%;
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1rem;
   background: #FAF8F6;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.65rem;
   text-align: left;
   transition: background-color var(--transition-fast);
+  box-sizing: border-box;
 }
 
 .payment-policy-trigger:hover {
@@ -2324,12 +2396,21 @@
 .payment-policy-trigger-left {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.payment-policy-text-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
 .payment-policy-icon-badge {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius-md);
   background: var(--color-brand-purple-soft);
   color: var(--color-brand-purple);
@@ -2341,32 +2422,37 @@
 
 .payment-policy-trigger-title {
   font-family: var(--font-heading);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--color-brand-purple);
-  line-height: 1.3;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .payment-policy-trigger-subtitle {
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   color: var(--color-text-muted);
-  margin-top: 0.15rem;
-  line-height: 1.3;
+  margin-top: 0.12rem;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .payment-policy-trigger-badge {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.78rem;
+  gap: 0.25rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: var(--color-brand-purple);
   background: #FFFFFF;
-  padding: 0.35rem 0.75rem;
+  padding: 0.28rem 0.65rem;
   border-radius: var(--radius-full);
   border: 1px solid rgba(89, 47, 124, 0.2);
   flex-shrink: 0;
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .payment-policy-trigger:hover .payment-policy-trigger-badge {
@@ -2376,11 +2462,13 @@
 }
 
 .payment-policy-content {
-  padding: 1.25rem 1.35rem;
+  padding: 1.1rem 1.2rem;
   background: #FFFFFF;
   font-size: 0.88rem;
   line-height: 1.65;
   color: var(--color-text-secondary);
+  box-sizing: border-box;
+  word-break: break-word;
 }
 
 .payment-policy-content p {
@@ -2395,25 +2483,25 @@
 
 @media (max-width: 480px) {
   .payment-policy-trigger {
-    padding: 0.85rem 1rem;
-    gap: 0.5rem;
+    padding: 0.75rem 0.8rem;
+    gap: 0.45rem;
   }
   .payment-policy-icon-badge {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
   .payment-policy-trigger-title {
-    font-size: 0.88rem;
+    font-size: 0.85rem;
   }
   .payment-policy-trigger-subtitle {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
   }
   .payment-policy-trigger-badge {
-    padding: 0.25rem 0.55rem;
-    font-size: 0.72rem;
+    padding: 0.22rem 0.5rem;
+    font-size: 0.7rem;
   }
   .payment-policy-content {
-    padding: 1rem;
+    padding: 0.85rem;
   }
 }
 

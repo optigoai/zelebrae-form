@@ -432,6 +432,7 @@ export const App: React.FC = () => {
 
             {currentStep === 5 && (
               <StepCustomerDetails
+                location={bookingState.location}
                 name={bookingState.name}
                 customerLocation={bookingState.customerLocation}
                 countryCode={bookingState.countryCode}

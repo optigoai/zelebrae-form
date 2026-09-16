@@ -1,20 +1,20 @@
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  User, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  MessageSquare, 
-  Sparkles, 
-  QrCode, 
-  UploadCloud, 
-  CheckCircle2, 
-  Trash2, 
-  Copy, 
-  Check, 
-  AlertCircle, 
-  ZoomIn, 
+import {
+  User,
+  MapPin,
+  Phone,
+  Mail,
+  MessageSquare,
+  Sparkles,
+  QrCode,
+  UploadCloud,
+  CheckCircle2,
+  Trash2,
+  Copy,
+  Check,
+  AlertCircle,
+  ZoomIn,
   X,
   CreditCard,
   ChevronDown,
@@ -22,8 +22,10 @@ import {
   FileText
 } from 'lucide-react';
 import { compressPaymentImage } from '../utils/imageUtils';
+import { getLocationPaymentDetails } from '../config/constants';
 
 interface StepCustomerDetailsProps {
+  location?: string;
   name: string;
   customerLocation: string;
   countryCode: string;
@@ -37,6 +39,7 @@ interface StepCustomerDetailsProps {
 }
 
 export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
+  location,
   name,
   customerLocation,
   countryCode,
@@ -55,7 +58,10 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
   const [isPolicyOpen, setIsPolicyOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const upiId = 'pinelabs.stq3698549@pineaxis';
+  const paymentInfo = getLocationPaymentDetails(location);
+  const upiId = paymentInfo.upiId;
+  const qrImage = paymentInfo.qrImage;
+  const branchName = paymentInfo.name;
 
   const handleCopyUpi = async () => {
     try {
@@ -142,7 +148,6 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
             id="fullNameInput"
             type="text"
             className={`input-field ${errors.name ? 'error' : ''}`}
-            placeholder="e.g. Rahul"
             value={name}
             onChange={(e) => onChangeField('name', e.target.value)}
             autoComplete="name"
@@ -285,15 +290,15 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
         <div className="payment-content-grid">
           {/* Left Column: QR Code & UPI ID */}
           <div className="payment-qr-col">
-            <div 
+            <div
               className="payment-qr-card"
               onClick={() => setIsQrZoomOpen(true)}
-              title="Click to zoom QR Code"
+              title={`Click to zoom ${branchName} UPI QR Code`}
             >
               <div className="payment-qr-image-wrap">
-                <img 
-                  src="/images/payment-qr.png" 
-                  alt="Pine Labs Scan & Pay UPI QR Code" 
+                <img
+                  src={qrImage}
+                  alt={`Scan & Pay UPI QR Code - ${branchName}`}
                   className="payment-qr-img"
                 />
                 <span className="payment-qr-zoom-tag">
@@ -348,7 +353,7 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
 
             {/* Upload Area or Preview */}
             {!paymentScreenshot ? (
-              <div 
+              <div
                 className={`payment-dropzone ${errors.paymentScreenshot ? 'dropzone-error' : ''}`}
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -382,15 +387,15 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
               /* Attached Screenshot Card */
               <div className="payment-preview-card">
                 <div className="payment-preview-left">
-                  <img 
-                    src={paymentScreenshot} 
-                    alt="Payment Screenshot Preview" 
+                  <img
+                    src={paymentScreenshot}
+                    alt="Payment Screenshot Preview"
                     className="payment-preview-thumb"
                   />
                   <div className="payment-preview-info">
                     <span className="payment-preview-tag">
                       <CheckCircle2 size={13} color="#059669" />
-                      ₹500 Payment Screenshot Attached
+                      ₹500 Receipt Attached
                     </span>
                     <span className="payment-preview-filename">
                       {paymentScreenshotName || 'payment_receipt.jpg'}
@@ -439,25 +444,25 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
           >
             <div className="payment-policy-trigger-left">
               <div className="payment-policy-icon-badge">
-                <FileText size={18} />
+                <FileText size={17} />
               </div>
-              <div>
+              <div className="payment-policy-text-wrap">
                 <div className="payment-policy-trigger-title">
-                  🎉 Celebration Hall Payment & Booking Policy
+                  🎉 Celebration Booking Policy
                 </div>
                 <div className="payment-policy-trigger-subtitle">
-                  ₹500 advance terms, cancellation & refund details • Tap to {isPolicyOpen ? 'hide' : 'read'}
+                  ₹500 advance terms & refund rules • Tap to {isPolicyOpen ? 'hide' : 'read'}
                 </div>
               </div>
             </div>
             <div className="payment-policy-trigger-badge">
-              <span>{isPolicyOpen ? 'Hide Policy' : 'View Policy'}</span>
-              <ChevronDown 
-                size={16} 
-                style={{ 
-                  transform: isPolicyOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
-                  transition: 'transform 0.25s ease' 
-                }} 
+              <span>{isPolicyOpen ? 'Hide' : 'View'}</span>
+              <ChevronDown
+                size={15}
+                style={{
+                  transform: isPolicyOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.25s ease'
+                }}
               />
             </div>
           </button>
@@ -465,7 +470,7 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
           {isPolicyOpen && (
             <div id="payment-policy-body" className="payment-policy-content animate-fade-in">
               <h4 className="booking-policy-title">🎉 Celebration Hall Booking Policy</h4>
-              
+
               <p>
                 നിങ്ങളുടെ Celebration Hall Booking സ്ഥിരീകരിക്കുന്നതിനായി <strong>₹500 Booking Confirmation Amount</strong> ബുക്കിംഗ് സമയത്ത് അടയ്ക്കേണ്ടതാണ്.
               </p>
@@ -533,10 +538,10 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
         <div className="combo-preview-overlay" onClick={() => setIsQrZoomOpen(false)}>
           <div className="combo-preview-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
             <div className="combo-preview-header">
-              <h3 className="combo-preview-title">Zelebrae UPI Payment QR</h3>
-              <button 
-                type="button" 
-                className="combo-modal-close" 
+              <h3 className="combo-preview-title">Zelebrae {branchName} Payment QR</h3>
+              <button
+                type="button"
+                className="combo-modal-close"
                 onClick={() => setIsQrZoomOpen(false)}
                 aria-label="Close"
               >
@@ -544,9 +549,9 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
               </button>
             </div>
             <div className="combo-preview-img-container" style={{ background: '#FFFFFF', padding: '1.25rem 1rem', display: 'flex', justifyContent: 'center' }}>
-              <img 
-                src="/images/payment-qr.png" 
-                alt="Pine Labs Scan & Pay UPI QR Code" 
+              <img
+                src={qrImage}
+                alt={`Scan & Pay UPI QR Code - ${branchName}`}
                 className="combo-preview-img"
                 style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain' }}
               />
@@ -555,9 +560,9 @@ export const StepCustomerDetails: React.FC<StepCustomerDetailsProps> = ({
               <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-brand-purple)' }}>
                 {upiId}
               </span>
-              <button 
-                type="button" 
-                className="btn-modal-primary" 
+              <button
+                type="button"
+                className="btn-modal-primary"
                 onClick={handleCopyUpi}
                 style={{ padding: '0.45rem 0.9rem', fontSize: '0.82rem' }}
               >

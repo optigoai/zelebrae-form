@@ -9,7 +9,9 @@ export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
     image: '/hero.webp',
     maxCapacity: 15,
     active: true,
-    features: []
+    features: [],
+    qrImage: '/images/qr-pantheerankavu.png',
+    upiId: 'pinelabs.stq3698549@pineaxis'
   },
   {
     id: 'karaparamba',
@@ -19,7 +21,9 @@ export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
     image: '/hero.webp',
     maxCapacity: 15,
     active: true,
-    features: []
+    features: [],
+    qrImage: '/images/qr-karaparamba.png',
+    upiId: 'pinelabs.stq3816463@pineaxis'
   },
   {
     id: 'ashokapuram',
@@ -29,7 +33,9 @@ export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
     image: '/hero.webp',
     maxCapacity: 15,
     active: true,
-    features: []
+    features: [],
+    qrImage: '/images/qr-ashokapuram.png',
+    upiId: 'pinelabs.stq3816464@pineaxis'
   },
   {
     id: 'arakkinar',
@@ -39,9 +45,55 @@ export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
     image: '/hero.webp',
     maxCapacity: 15,
     active: true,
-    features: []
+    features: [],
+    qrImage: '/images/qr-arakkinar.png',
+    upiId: '318162440783906@cnrb'
   }
 ];
+
+export interface LocationPaymentInfo {
+  name: string;
+  qrImage: string;
+  upiId: string;
+  merchantName: string;
+}
+
+export const LOCATION_PAYMENT_CONFIG: Record<string, LocationPaymentInfo> = {
+  pantheerankavu: {
+    name: 'Pantheerankavu',
+    qrImage: '/images/qr-pantheerankavu.png',
+    upiId: 'pinelabs.stq3698549@pineaxis',
+    merchantName: 'ZELEBRAE INDIA PRIVATE L'
+  },
+  karaparamba: {
+    name: 'Karaparamba',
+    qrImage: '/images/qr-karaparamba.png',
+    upiId: 'pinelabs.stq3816463@pineaxis',
+    merchantName: 'ZELEBRAE INDIA PRIVATE L'
+  },
+  ashokapuram: {
+    name: 'Ashokapuram',
+    qrImage: '/images/qr-ashokapuram.png',
+    upiId: 'pinelabs.stq3816464@pineaxis',
+    merchantName: 'ZELEBRAE INDIA PRIVATE L'
+  },
+  arakkinar: {
+    name: 'Arakkinar',
+    qrImage: '/images/qr-arakkinar.png',
+    upiId: '318162440783906@cnrb',
+    merchantName: 'LD S ALIMENT'
+  }
+};
+
+export function getLocationPaymentDetails(locationId?: string): LocationPaymentInfo {
+  const norm = (locationId || '').toLowerCase().trim();
+  for (const key of Object.keys(LOCATION_PAYMENT_CONFIG)) {
+    if (norm.includes(key)) {
+      return LOCATION_PAYMENT_CONFIG[key];
+    }
+  }
+  return LOCATION_PAYMENT_CONFIG.pantheerankavu;
+}
 
 export const DEFAULT_OCCASIONS: Occasion[] = [
   {

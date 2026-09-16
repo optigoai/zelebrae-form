@@ -7,6 +7,8 @@ export interface CelebrationLocation {
   maxCapacity: number;
   active: boolean;
   features: string[];
+  qrImage?: string;
+  upiId?: string;
 }
 
 export interface Occasion {
