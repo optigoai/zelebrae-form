@@ -281,6 +281,9 @@ export const bookingApi = {
       };
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
+
     try {
       // Notice: We send as text/plain with JSON body to eliminate CORS preflight rejection in Google Apps Script!
       const res = await fetch(API_ENDPOINT, {
@@ -288,14 +291,20 @@ export const bookingApi = {
         headers: {
           'Content-Type': 'text/plain;charset=utf-8'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const data: BookingApiResponse = await res.json();
       return data;
     } catch (err: any) {
+      clearTimeout(timeoutId);
       console.error('Submit booking error:', err);
+      if (err.name === 'AbortError') {
+        throw new Error('Confirmation took longer than expected. Please check your internet connection or WhatsApp us directly.');
+      }
       throw new Error(err.message || 'Something went wrong while confirming your booking. Please check your connection and try again.');
     }
   },

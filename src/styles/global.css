@@ -159,11 +159,26 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   transform: translateY(-1px);
 }
 
-.btn-cta:disabled {
+.btn-cta:disabled:not(.is-submitting) {
   background: #C8B9D0;
   box-shadow: none;
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+.btn-cta.is-submitting,
+.btn-cta:disabled.is-submitting {
+  background: linear-gradient(135deg, #592F7C, #7C3AED, #9333EA, #592F7C) !important;
+  background-size: 300% 300% !important;
+  animation: shimmerGradient 2.5s ease infinite !important;
+  color: #FFFFFF !important;
+  opacity: 1 !important;
+  cursor: wait !important;
+  box-shadow: 0 6px 22px rgba(124, 58, 237, 0.45) !important;
+}
+
+.bottom-bar-spinner {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
 }
 
 .btn-purple {
@@ -198,6 +213,17 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 
 /* Keyframes & Animations */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmerGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -211,6 +237,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 @keyframes pulseGlow {
   0%, 100% { box-shadow: 0 0 0 0 rgba(27, 135, 85, 0.4); }
   50% { box-shadow: 0 0 0 8px rgba(27, 135, 85, 0); }
+}
+
+.animate-spin {
+  animation: spin 0.85s linear infinite !important;
+  display: inline-block;
+  will-change: transform;
 }
 
 .animate-fade-in {

@@ -53,15 +53,15 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
         <div className="bottom-bar-right">
           <button
             type="button"
-            className="btn btn-cta bottom-bar-cta"
+            className={`btn btn-cta bottom-bar-cta ${isSubmitting ? 'is-submitting' : ''}`}
             onClick={onNext}
             disabled={isNextDisabled || isSubmitting}
             aria-label={getCtaText()}
           >
             {isSubmitting ? (
               <>
-                <Loader2 size={18} className="animate-spin" />
-                <span>Confirming...</span>
+                <Loader2 size={19} className="animate-spin bottom-bar-spinner" />
+                <span>Confirming Celebration...</span>
               </>
             ) : isFinalStep ? (
               <>

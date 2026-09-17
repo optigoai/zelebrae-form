@@ -9,6 +9,7 @@ import { StepCustomerDetails } from './components/StepCustomerDetails';
 import { StepReview } from './components/StepReview';
 import { SuccessScreen } from './components/SuccessScreen';
 import { ManageBookingsModal } from './components/ManageBookingsModal';
+import { ConfirmationLoadingModal } from './components/ConfirmationLoadingModal';
 import { MobileBottomBar } from './components/MobileBottomBar';
 import { bookingApi } from './services/bookingApi';
 import { AppConfig, BookingState } from './types/booking';
@@ -478,6 +479,9 @@ export const App: React.FC = () => {
         isOpen={isManageModalOpen}
         onClose={() => setIsManageModalOpen(false)}
       />
+
+      {/* Prominent Full-Screen Confirmation Loading Modal */}
+      <ConfirmationLoadingModal isOpen={isSubmitting} />
     </div>
   );
 };
