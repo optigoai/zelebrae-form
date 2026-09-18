@@ -3307,3 +3307,540 @@ body.modal-open {
   letter-spacing: 0.02em;
 }
 
+/* Quick Date Navigation Chips (Step 3 Date/Time) */
+.quick-dates-container {
+  margin-bottom: 1rem;
+}
+
+.quick-dates-scroll {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.quick-dates-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-date-chip {
+  flex: 1;
+  min-width: 80px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--color-border-card);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.quick-date-chip:hover {
+  border-color: var(--color-brand-purple);
+  background: #FBF8FD;
+  transform: translateY(-1px);
+}
+
+.quick-date-chip.active {
+  border-color: var(--color-brand-purple);
+  background: var(--color-brand-purple);
+  box-shadow: 0 4px 12px rgba(89, 47, 124, 0.22);
+}
+
+.quick-date-chip .chip-primary {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.quick-date-chip.active .chip-primary {
+  color: #FFFFFF;
+}
+
+.quick-date-chip .chip-secondary {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-top: 0.15rem;
+}
+
+.quick-date-chip.active .chip-secondary {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Manage Bookings: Edit & Reschedule Panel */
+.manage-card-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.btn-edit-booking {
+  background: #F4EEF8;
+  border: 1px solid #D6BEE3;
+  color: var(--color-brand-purple);
+  border-radius: var(--radius-full);
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-edit-booking:hover {
+  background: var(--color-brand-purple);
+  border-color: var(--color-brand-purple);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(89, 47, 124, 0.25);
+}
+
+.manage-edit-panel {
+  width: 100%;
+  background: #FDFCFE;
+  border: 1.5px solid #D6BEE3;
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-top: 0.75rem;
+  box-shadow: inset 0 2px 6px rgba(89, 47, 124, 0.03);
+}
+
+.manage-edit-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-brand-purple);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.85rem;
+}
+
+.manage-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+@media (max-width: 480px) {
+  .manage-edit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.manage-edit-field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.manage-edit-field input,
+.manage-edit-field select,
+.manage-edit-field textarea {
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-md);
+  background: #FFFFFF;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.manage-edit-field input:focus,
+.manage-edit-field select:focus,
+.manage-edit-field textarea:focus {
+  outline: none;
+  border-color: var(--color-brand-purple);
+  box-shadow: 0 0 0 2px rgba(89, 47, 124, 0.15);
+}
+
+/* Quick 1-Tap Date Navigation in Edit Panel */
+.manage-quick-dates {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding: 0.15rem 0.1rem 0.5rem 0.1rem;
+  margin-bottom: 0.65rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.manage-quick-dates::-webkit-scrollbar {
+  display: none;
+}
+
+.manage-quick-date-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-card);
+  background: #FFFFFF;
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  line-height: 1.2;
+}
+
+.manage-quick-date-chip:hover {
+  border-color: var(--color-brand-purple);
+  color: var(--color-brand-purple);
+  background: #F9F5FB;
+}
+
+.manage-quick-date-chip.active {
+  background: linear-gradient(135deg, var(--color-brand-purple), var(--color-brand-purple-dark));
+  border-color: var(--color-brand-purple);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(89, 47, 124, 0.22);
+}
+
+.manage-quick-date-chip .chip-label {
+  font-weight: 700;
+  font-size: 0.76rem;
+}
+
+.manage-quick-date-chip .chip-date {
+  font-size: 0.64rem;
+  opacity: 0.88;
+}
+
+.manage-edit-slots-wrap {
+  margin-bottom: 0.95rem;
+}
+
+/* Shimmer Keyframes for High-Speed Loading Effect */
+@keyframes slotShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Animated Slot Searching Skeleton Loader */
+.manage-slot-loading-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem 0.5rem;
+  background: rgba(89, 47, 124, 0.03);
+  border: 1px dashed rgba(89, 47, 124, 0.22);
+  border-radius: var(--radius-md);
+  margin-top: 0.35rem;
+}
+
+.manage-slot-loading-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-brand-purple);
+}
+
+.manage-slot-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.45rem;
+}
+
+.manage-slot-skeleton-chip {
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, #F1EDF5 0%, #FAF8FC 50%, #F1EDF5 100%);
+  background-size: 200% 100%;
+  animation: slotShimmer 1.4s infinite ease-in-out;
+  border: 1px solid rgba(89, 47, 124, 0.08);
+}
+
+/* Full Slot Grid with Status Badges */
+.manage-edit-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 0.2rem 0.1rem;
+}
+
+.manage-edit-slot-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1.5px solid var(--color-border-card);
+  background: #FFFFFF;
+  color: var(--color-text-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.manage-edit-slot-btn:hover:not(:disabled) {
+  border-color: var(--color-brand-purple);
+  background: #F9F5FB;
+  transform: translateY(-1px);
+}
+
+.manage-edit-slot-btn.selected {
+  background: var(--color-brand-purple);
+  border-color: var(--color-brand-purple);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(89, 47, 124, 0.25);
+}
+
+.manage-edit-slot-btn.is-current {
+  border-color: #8B5CF6;
+  background: #F5F3FF;
+}
+
+.manage-edit-slot-btn.is-current.selected {
+  background: var(--color-brand-purple);
+  border-color: var(--color-brand-purple);
+}
+
+.manage-edit-slot-btn:disabled,
+.manage-edit-slot-btn.is-passed,
+.manage-edit-slot-btn.is-booked {
+  cursor: not-allowed;
+  opacity: 0.55;
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+  color: #94A3B8;
+}
+
+.manage-edit-slot-btn .slot-time-text {
+  font-weight: 700;
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.manage-slot-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 0.12rem 0.4rem;
+  border-radius: var(--radius-full);
+  line-height: 1;
+}
+
+.manage-slot-badge.badge-current {
+  background: #EDE9FE;
+  color: #6D28D9;
+}
+
+.manage-edit-slot-btn.selected .manage-slot-badge.badge-current {
+  background: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+.manage-slot-badge.badge-available {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.manage-edit-slot-btn.selected .manage-slot-badge.badge-available {
+  background: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+.manage-slot-badge.badge-passed {
+  background: #F1F5F9;
+  color: #64748B;
+}
+
+.manage-slot-badge.badge-booked {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
+.manage-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed var(--color-border-subtle);
+}
+
+/* Modal Tabs (Cancel vs Edit) */
+.manage-modal-tabs {
+  display: flex;
+  background: #F3EDF7;
+  border-radius: var(--radius-full);
+  padding: 0.3rem;
+  gap: 0.3rem;
+  margin: 0.75rem 0 1.25rem 0;
+}
+
+.manage-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.manage-tab-btn:hover {
+  color: var(--color-brand-purple);
+}
+
+.manage-tab-btn.active {
+  background: #FFFFFF;
+  color: var(--color-brand-purple);
+  box-shadow: 0 2px 8px rgba(89, 47, 124, 0.16);
+}
+
+.manage-tab-btn.cancel-active.active {
+  color: #E11D48;
+}
+
+/* Full-Screen Cancel / Edit Booking View (Native App Feel) */
+.manage-fullscreen-view {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  background: var(--color-bg-page, #F8F5FA);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.manage-fullscreen-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(89, 47, 124, 0.12);
+  padding: 0.75rem 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.manage-fullscreen-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.manage-fs-back-btn {
+  background: #F3EDF7;
+  border: none;
+  color: var(--color-brand-purple);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.manage-fs-back-btn:hover {
+  background: var(--color-brand-purple);
+  color: #FFFFFF;
+}
+
+.manage-fullscreen-title {
+  font-family: var(--font-heading);
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--color-brand-purple);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.manage-fullscreen-subtitle {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  margin: 0.1rem 0 0 0;
+}
+
+.manage-fs-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.manage-fs-close-btn:hover {
+  background: #E5E7EB;
+  color: var(--color-text-primary);
+}
+
+.manage-fullscreen-content {
+  flex: 1;
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 5rem 1rem;
+  box-sizing: border-box;
+}
+
+.manage-fullscreen-search-card {
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  box-shadow: 0 4px 18px rgba(89, 47, 124, 0.06);
+}
+
+
+

@@ -15,6 +15,11 @@ import { bookingApi } from './services/bookingApi';
 import { AppConfig, BookingState } from './types/booking';
 import { DEFAULT_APP_CONFIG } from './config/constants';
 import { getKolkataToday } from './utils/dateUtils';
+import { 
+  buildWhatsAppBookingMessage, 
+  getBranchWhatsAppNumber, 
+  openWhatsAppChat 
+} from './utils/whatsappUtils';
 import { AlertTriangle, X } from 'lucide-react';
 
 const STEP_NAMES = [
@@ -276,6 +281,23 @@ export const App: React.FC = () => {
       if (response.success && response.bookingId) {
         setConfirmedBookingId(response.bookingId);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Generate branch-specific WhatsApp booking confirmation URL
+        const branchWhatsApp = getBranchWhatsAppNumber(bookingState.location);
+        const whatsappMsg = buildWhatsAppBookingMessage(
+          response.bookingId,
+          bookingState,
+          config.locations,
+          config.occasions,
+          config.amenities,
+          config.combos
+        );
+        const whatsappUrl = `https://wa.me/${branchWhatsApp}?text=${encodeURIComponent(whatsappMsg)}`;
+
+        // Open WhatsApp chat at the same time after showing booking confirmed screen
+        setTimeout(() => {
+          openWhatsAppChat(whatsappUrl);
+        }, 400);
       } else if (response.error === 'SLOT_ALREADY_BOOKED') {
         // Double booking collision handled cleanly!
         setGlobalError('Sorry, that slot was just booked by someone else. Please choose another time.');
@@ -369,8 +391,11 @@ export const App: React.FC = () => {
             bookingId={confirmedBookingId}
             state={bookingState}
             locations={config.locations}
+            occasions={config.occasions}
+            amenities={config.amenities}
+            combos={config.combos}
             onReset={handleReset}
-            businessWhatsApp={config.whatsappNumber}
+            businessWhatsApp={getBranchWhatsAppNumber(bookingState.location)}
           />
         ) : (
           <>
@@ -474,10 +499,12 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Self-Service Manage / Cancel Bookings Modal */}
+      {/* Self-Service Manage / Cancel / Reschedule Bookings Modal */}
       <ManageBookingsModal
         isOpen={isManageModalOpen}
         onClose={() => setIsManageModalOpen(false)}
+        onBookingCancelled={() => bookingApi.invalidateSlotCache()}
+        onBookingUpdated={() => bookingApi.invalidateSlotCache()}
       />
 
       {/* Prominent Full-Screen Confirmation Loading Modal */}

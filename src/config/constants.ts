@@ -1,4 +1,5 @@
 import { AppConfig, CelebrationLocation, Occasion, Amenity, ComboItem } from '../types/booking';
+export { BRANCH_WHATSAPP_NUMBERS, getBranchWhatsAppNumber, formatBranchWhatsAppNumber, buildWhatsAppBookingMessage, openWhatsAppChat } from '../utils/whatsappUtils';
 
 export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
   {
@@ -11,7 +12,8 @@ export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
     active: true,
     features: [],
     qrImage: '/images/qr-pantheerankavu.png',
-    upiId: 'pinelabs.stq3698549@pineaxis'
+    upiId: 'pinelabs.stq3698549@pineaxis',
+    whatsappNumber: '918585855859'
   },
   {
     id: 'karaparamba',
@@ -23,7 +25,8 @@ export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
     active: true,
     features: [],
     qrImage: '/images/qr-karaparamba.png',
-    upiId: 'pinelabs.stq3816463@pineaxis'
+    upiId: 'pinelabs.stq3816463@pineaxis',
+    whatsappNumber: '918585851285'
   },
   {
     id: 'ashokapuram',
@@ -35,7 +38,8 @@ export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
     active: true,
     features: [],
     qrImage: '/images/qr-ashokapuram.png',
-    upiId: 'pinelabs.stq3816464@pineaxis'
+    upiId: 'pinelabs.stq3816464@pineaxis',
+    whatsappNumber: '918585853852'
   },
   {
     id: 'arakkinar',
@@ -47,7 +51,8 @@ export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
     active: true,
     features: [],
     qrImage: '/images/qr-arakkinar.png',
-    upiId: '318162440783906@cnrb'
+    upiId: '318162440783906@cnrb',
+    whatsappNumber: '918585850859'
   }
 ];
 

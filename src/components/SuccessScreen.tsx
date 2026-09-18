@@ -8,8 +8,14 @@ import {
   Copy, 
   Check 
 } from 'lucide-react';
-import { BookingState, CelebrationLocation } from '../types/booking';
+import { BookingState, CelebrationLocation, Occasion, Amenity, ComboItem } from '../types/booking';
 import { formatCelebrationDate, formatTimeSlotRange } from '../utils/dateUtils';
+import { 
+  buildWhatsAppBookingMessage, 
+  getBranchWhatsAppNumber, 
+  formatBranchWhatsAppNumber, 
+  openWhatsAppChat 
+} from '../utils/whatsappUtils';
 
 interface SuccessScreenProps {
   bookingId: string;
@@ -17,6 +23,9 @@ interface SuccessScreenProps {
   locations: CelebrationLocation[];
   onReset: () => void;
   businessWhatsApp?: string;
+  occasions?: Occasion[];
+  amenities?: Amenity[];
+  combos?: ComboItem[];
 }
 
 export const SuccessScreen: React.FC<SuccessScreenProps> = ({
@@ -24,7 +33,10 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   state,
   locations,
   onReset,
-  businessWhatsApp = '918585855859'
+  businessWhatsApp,
+  occasions,
+  amenities,
+  combos
 }) => {
   const [copied, setCopied] = React.useState(false);
 
@@ -43,27 +55,27 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
   }, []);
 
   const currentLocation = locations.find(l => l.id === state.location);
-  const locationName = currentLocation?.name || 'Ashokapuram Celebration Point';
+  const locationName = currentLocation?.name || 'Celebration Point';
   const celebrationDate = formatCelebrationDate(state.date);
   const celebrationSlotRange = formatTimeSlotRange(state.timeSlot);
   const occasionName = state.occasion === 'other' && state.customOccasion 
     ? state.customOccasion 
     : state.occasion;
 
-  // Build official WhatsApp message
-  const whatsappMessage = `Hi Zelebrae, I have completed my celebration booking.
+  // Resolve branch-specific WhatsApp phone number and build official booking message
+  const targetWhatsApp = businessWhatsApp || getBranchWhatsAppNumber(state.location);
+  const formattedBranchNumber = formatBranchWhatsAppNumber(state.location);
 
-Booking ID: ${bookingId}
-Name: ${state.name}
-Location: ${locationName}
-Date: ${celebrationDate}
-Time: ${state.timeSlot} (${celebrationSlotRange})
-Occasion: ${occasionName}
-Guests: ${state.guests}${state.combo && state.combo !== 'none' ? `\nCombo: ${state.comboPackage ? `${state.comboPackage} (₹${state.comboPrice})` : state.combo}` : ''}
-WhatsApp: ${state.countryCode} ${state.whatsapp}
-${state.additionalRequirements ? `Notes: ${state.additionalRequirements}` : ''}`;
+  const whatsappMessage = buildWhatsAppBookingMessage(
+    bookingId,
+    state,
+    locations,
+    occasions,
+    amenities,
+    combos
+  );
 
-  const whatsappUrl = `https://wa.me/${businessWhatsApp}?text=${encodeURIComponent(whatsappMessage)}`;
+  const whatsappUrl = `https://wa.me/${targetWhatsApp}?text=${encodeURIComponent(whatsappMessage)}`;
 
   // Copy booking ID
   const handleCopyId = () => {
@@ -200,9 +212,13 @@ ${state.additionalRequirements ? `Notes: ${state.additionalRequirements}` : ''}`
           target="_blank"
           rel="noopener noreferrer"
           className="btn btn-whatsapp"
+          onClick={(e) => {
+            e.preventDefault();
+            openWhatsAppChat(whatsappUrl);
+          }}
         >
           <MessageCircle size={20} />
-          <span>Chat on WhatsApp</span>
+          <span>Chat on WhatsApp ({formattedBranchNumber})</span>
         </a>
 
         <button

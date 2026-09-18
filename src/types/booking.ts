@@ -9,6 +9,7 @@ export interface CelebrationLocation {
   features: string[];
   qrImage?: string;
   upiId?: string;
+  whatsappNumber?: string;
 }
 
 export interface Occasion {
@@ -124,4 +125,22 @@ export interface ManageableBooking {
   amenities?: string;
   combo?: string;
   status: 'CONFIRMED' | 'CANCELLED' | string;
+}
+
+export interface EditBookingPayload {
+  bookingId: string;
+  phone: string;
+  date?: string;
+  timeSlot?: string;
+  guests?: number;
+  occasion?: string;
+  additionalRequirements?: string;
+}
+
+export interface EditBookingResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  bookingId?: string;
+  updatedBooking?: Partial<ManageableBooking>;
 }

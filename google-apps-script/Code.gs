@@ -238,23 +238,40 @@ function doGet(e) {
       });
     }
 
-    if (action === 'getAvailability') {
+    if (action === 'getAvailability' || action === 'getAvailabilityBatch') {
       const location = (e.parameter.location || 'pantheerankavu').toLowerCase().trim();
-      const date = (e.parameter.date || '').trim(); // Expected: YYYY-MM-DD
+      const rawDates = (e.parameter.dates || e.parameter.date || '').toString().trim();
 
-      if (!date) {
+      if (!rawDates) {
         return jsonResponse({
           success: false,
           error: "Date parameter (YYYY-MM-DD) is required"
         });
       }
 
-      const availableSlots = computeAvailableSlots(ss, location, date);
+      // Check if multiple dates are requested
+      if (rawDates.includes(',') || action === 'getAvailabilityBatch') {
+        const dateList = rawDates.split(',').map(function(d) { return d.trim(); }).filter(Boolean);
+        const batchMap = {};
+        for (let idx = 0; idx < dateList.length; idx++) {
+          const d = dateList[idx];
+          batchMap[d] = computeAvailableSlots(ss, location, d);
+        }
+        return jsonResponse({
+          success: true,
+          location: location,
+          targetSheet: getLocationSheetName(location),
+          dates: batchMap
+        });
+      }
+
+      // Single date request
+      const availableSlots = computeAvailableSlots(ss, location, rawDates);
       return jsonResponse({
         success: true,
         location: location,
         targetSheet: getLocationSheetName(location),
-        date: date,
+        date: rawDates,
         availableSlots: availableSlots
       });
     }
@@ -321,6 +338,11 @@ function doPost(e) {
     // Check if this is a cancellation request
     if (body.action === 'cancelBooking') {
       return handleCancelBooking(body, masterSS);
+    }
+
+    // Check if this is an edit / reschedule request
+    if (body.action === 'editBooking' || body.action === 'rescheduleBooking') {
+      return handleEditBooking(body, masterSS);
     }
 
     // 2. Extract and sanitize payload
@@ -492,6 +514,9 @@ function doPost(e) {
     // Ensure write is immediately committed to Google Sheets
     SpreadsheetApp.flush();
 
+    // Immediately clear edge cache for this branch & date so new bookings are blocked instantly
+    invalidateAvailabilityCache(rawLocation, date);
+
     return jsonResponse({
       success: true,
       bookingId: bookingId,
@@ -613,6 +638,22 @@ function normalizeSlot(val) {
  * Reads bookings directly from the branch's dedicated spreadsheet & master spreadsheet
  */
 function computeAvailableSlots(ss, location, date) {
+  const normLocation = (location || 'pantheerankavu').toLowerCase().trim();
+  const cleanDate = (date || '').trim();
+  const cacheKey = "avail_" + normLocation + "_" + cleanDate;
+
+  // 0. Fast edge cache check (~50ms response)
+  try {
+    const cache = CacheService.getScriptCache();
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      const cachedSlots = JSON.parse(cached);
+      return filterPastSlotsIfToday(cachedSlots, cleanDate);
+    }
+  } catch (e) {
+    Logger.log("Cache read notice: " + e.toString());
+  }
+
   // 1. Base slots (from Slots config sheet or defaults)
   let configuredSlots = [
     "09:30 AM", "10:30 AM", "11:30 AM", "12:30 PM",
@@ -693,32 +734,62 @@ function computeAvailableSlots(ss, location, date) {
   // 3. Filter out booked slots
   let available = configuredSlots.filter(slot => !bookedSlots.has(normalizeSlot(slot)));
 
-  // 4. If selected date is today (Asia/Kolkata), filter out slots that have already passed
+  // 4. Save to edge cache for 3 minutes (180s)
+  try {
+    const cache = CacheService.getScriptCache();
+    cache.put(cacheKey, JSON.stringify(available), 180);
+  } catch (e) {
+    Logger.log("Cache write notice: " + e.toString());
+  }
+
+  // 5. Realtime filter for today
+  return filterPastSlotsIfToday(available, cleanDate);
+}
+
+/**
+ * Filters out slots that have already passed if date is today (Asia/Kolkata)
+ */
+function filterPastSlotsIfToday(slots, date) {
   const now = new Date();
   const todayStr = Utilities.formatDate(now, TIMEZONE, "yyyy-MM-dd");
-  if (date < todayStr) {
-    return [];
-  }
-  if (date === todayStr) {
-    const currentHours = parseInt(Utilities.formatDate(now, TIMEZONE, "HH"), 10);
-    const currentMinutes = parseInt(Utilities.formatDate(now, TIMEZONE, "mm"), 10);
-    const currentTotalMinutes = currentHours * 60 + currentMinutes;
+  if (date < todayStr) return [];
+  if (date > todayStr) return slots;
 
-    available = available.filter(slot => {
-      const norm = normalizeSlot(slot);
-      const match = norm.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-      if (!match) return true;
-      let h = parseInt(match[1], 10);
-      const m = parseInt(match[2], 10);
-      const ampm = match[3].toUpperCase();
-      if (ampm === 'AM' && h === 12) h = 0;
-      if (ampm === 'PM' && h !== 12) h += 12;
-      const slotTotalMinutes = h * 60 + m;
-      return slotTotalMinutes > currentTotalMinutes;
-    });
-  }
+  const currentHours = parseInt(Utilities.formatDate(now, TIMEZONE, "HH"), 10);
+  const currentMinutes = parseInt(Utilities.formatDate(now, TIMEZONE, "mm"), 10);
+  const currentTotalMinutes = currentHours * 60 + currentMinutes;
 
-  return available;
+  return (slots || []).filter(slot => {
+    const norm = normalizeSlot(slot);
+    const match = norm.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return true;
+    let h = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    const ampm = match[3].toUpperCase();
+    if (ampm === 'AM' && h === 12) h = 0;
+    if (ampm === 'PM' && h !== 12) h += 12;
+    const slotTotalMinutes = h * 60 + m;
+    return slotTotalMinutes > currentTotalMinutes;
+  });
+}
+
+function invalidateAvailabilityCache(location, date) {
+  try {
+    const cache = CacheService.getScriptCache();
+    if (location && date) {
+      cache.remove("avail_" + location.toLowerCase().trim() + "_" + date.trim());
+    } else if (location) {
+      // Invalidate today and upcoming 7 days for this location if date not specified
+      const now = new Date();
+      for (let i = 0; i <= 7; i++) {
+        const d = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+        const dStr = Utilities.formatDate(d, TIMEZONE, "yyyy-MM-dd");
+        cache.remove("avail_" + location.toLowerCase().trim() + "_" + dStr);
+      }
+    }
+  } catch (e) {
+    Logger.log("Cache invalidation notice: " + e.toString());
+  }
 }
 
 /**
@@ -1171,6 +1242,7 @@ function handleCancelBooking(body, masterSS) {
 
   let foundBooking = false;
   let targetLocation = '';
+  let targetDate = '';
 
   // 1. Update in Master Spreadsheet
   if (masterSS) {
@@ -1228,6 +1300,7 @@ function handleCancelBooking(body, masterSS) {
             });
           }
 
+          targetDate = rowDate;
           sheet.getRange(i + 1, 15).setValue("CANCELLED"); // Column O (status)
           foundBooking = true;
           break;
@@ -1263,11 +1336,224 @@ function handleCancelBooking(body, masterSS) {
     });
   }
 
+  // Flush spreadsheet updates
+  SpreadsheetApp.flush();
+
+  // Invalidate slot cache so the cancelled slot becomes instantly available again for other customers
+  if (targetLocation && targetDate) {
+    invalidateAvailabilityCache(targetLocation, targetDate);
+  }
+
   return jsonResponse({
     success: true,
     bookingId: bookingId,
     status: "CANCELLED",
     message: "Your celebration booking has been successfully cancelled. The slot has been released."
+  });
+}
+
+/**
+ * Edits or reschedules an existing booking in Master & Branch spreadsheets
+ */
+function handleEditBooking(body, masterSS) {
+  const bookingId = (body.bookingId || body.booking_id || '').toString().trim();
+  const rawPhone = (body.phone || body.whatsapp || '').toString().replace(/\D/g, '');
+  const searchPhone = rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
+
+  if (!bookingId || !searchPhone) {
+    return jsonResponse({
+      success: false,
+      error: "INVALID_PARAMS",
+      message: "Both Booking ID and registered Phone number are required."
+    });
+  }
+
+  let foundBooking = false;
+  let targetLocation = '';
+  let targetLocationCode = '';
+  let currentRowIndex = -1;
+  let currentSheet = null;
+  let existingRow = null;
+
+  // 1. Locate booking in Master Spreadsheet
+  if (masterSS) {
+    const sheetsToCheck = [
+      masterSS.getSheetByName("All Bookings"),
+      masterSS.getSheetByName("Bookings")
+    ].filter(Boolean);
+
+    for (const key in LOCATION_SHEET_MAP) {
+      const s = masterSS.getSheetByName(LOCATION_SHEET_MAP[key]);
+      if (s && !sheetsToCheck.includes(s)) sheetsToCheck.push(s);
+    }
+
+    for (const sheet of sheetsToCheck) {
+      const data = sheet.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        const rowId = (data[i][0] || '').toString().trim();
+        if (rowId === bookingId) {
+          const rowPhone = (data[i][7] || '').toString().replace(/\D/g, '');
+          const rowSuffix = rowPhone.length >= 10 ? rowPhone.slice(-10) : rowPhone;
+          if (rowSuffix !== searchPhone && rowPhone.indexOf(searchPhone) === -1) {
+            return jsonResponse({
+              success: false,
+              error: "PHONE_MISMATCH",
+              message: "The phone number does not match the booking record."
+            });
+          }
+
+          const currentStatus = (data[i][14] || '').toString().trim().toUpperCase();
+          if (currentStatus === 'CANCELLED') {
+            return jsonResponse({
+              success: false,
+              error: "ALREADY_CANCELLED",
+              message: "Cannot edit a cancelled booking."
+            });
+          }
+
+          targetLocation = (data[i][2] || '').toString().trim();
+          for (const k in LOCATION_SHEET_MAP) {
+            if (LOCATION_SHEET_MAP[k].toLowerCase() === targetLocation.toLowerCase() || k === targetLocation.toLowerCase()) {
+              targetLocationCode = k;
+              break;
+            }
+          }
+          if (!targetLocationCode) targetLocationCode = 'pantheerankavu';
+
+          currentSheet = sheet;
+          currentRowIndex = i + 1;
+          existingRow = data[i];
+          foundBooking = true;
+          break;
+        }
+      }
+      if (foundBooking) break;
+    }
+  }
+
+  if (!foundBooking) {
+    return jsonResponse({
+      success: false,
+      error: "BOOKING_NOT_FOUND",
+      message: "Booking ID was not found."
+    });
+  }
+
+  // 2. Validate Rescheduling / Date Change
+  const newDate = (body.date || '').toString().trim();
+  const rawNewSlot = (body.time_slot || body.timeSlot || '').toString().trim().replace(/^'/, '');
+  const newSlotNorm = rawNewSlot ? normalizeSlot(rawNewSlot) : '';
+
+  let curDate = (existingRow[3] || '').toString().trim();
+  if (existingRow[3] instanceof Date) {
+    curDate = Utilities.formatDate(existingRow[3], TIMEZONE, "yyyy-MM-dd");
+  }
+  const curSlotNorm = normalizeSlot(existingRow[4]);
+
+  const dateOrSlotChanged = (newDate && newDate !== curDate) || (newSlotNorm && newSlotNorm !== curSlotNorm);
+
+  if (dateOrSlotChanged) {
+    // Check advance notice rule for the old slot
+    const checkNotice = isCancellationPermitted(curDate, curSlotNorm);
+    if (!checkNotice.allowed) {
+      return jsonResponse({
+        success: false,
+        error: "RESCHEDULE_NOTICE_REQUIRED",
+        message: checkNotice.reason || "Cannot reschedule because it has passed the required advance notice for this celebration slot."
+      });
+    }
+
+    const finalDate = newDate || curDate;
+    const finalSlot = newSlotNorm || curSlotNorm;
+
+    // Check if new slot has already passed
+    const now = new Date();
+    const todayStr = Utilities.formatDate(now, TIMEZONE, "yyyy-MM-dd");
+    if (finalDate < todayStr) {
+      return jsonResponse({
+        success: false,
+        error: "SLOT_PASSED",
+        message: "The chosen celebration date has already passed."
+      });
+    }
+
+    // Check collision with other bookings
+    if (isSlotAlreadyBooked(masterSS, targetLocationCode, finalDate, finalSlot)) {
+      return jsonResponse({
+        success: false,
+        error: "SLOT_OCCUPIED",
+        message: "The selected time slot is already booked. Please choose a different slot."
+      });
+    }
+  }
+
+  // 3. Apply updates to Master Sheet
+  if (newDate) {
+    currentSheet.getRange(currentRowIndex, 4).setValue(newDate); // Column D (date)
+  }
+  if (rawNewSlot) {
+    currentSheet.getRange(currentRowIndex, 5).setValue("'" + rawNewSlot); // Column E (time_slot)
+  }
+  if (body.guests !== undefined) {
+    const g = parseInt(body.guests, 10);
+    if (!isNaN(g) && g >= 1) currentSheet.getRange(currentRowIndex, 11).setValue(g); // Column K
+  }
+  if (body.occasion) {
+    currentSheet.getRange(currentRowIndex, 10).setValue(body.occasion.toString().trim()); // Column J
+  }
+  if (body.additional_requirements !== undefined || body.additionalRequirements !== undefined) {
+    const req = (body.additional_requirements || body.additionalRequirements || '').toString().trim();
+    currentSheet.getRange(currentRowIndex, 12).setValue(req); // Column L
+  }
+
+  // 4. Mirror updates to Branch's Dedicated Spreadsheet (if separate)
+  if (targetLocationCode) {
+    const branchSS = getLocationSpreadsheet(targetLocationCode);
+    if (branchSS && (!masterSS || branchSS.getId() !== masterSS.getId())) {
+      const branchSheet = getBookingTargetSheet(branchSS, targetLocationCode);
+      if (branchSheet) {
+        const bData = branchSheet.getDataRange().getValues();
+        for (let i = 1; i < bData.length; i++) {
+          const rowId = (bData[i][0] || '').toString().trim();
+          if (rowId === bookingId) {
+            const bRow = i + 1;
+            if (newDate) branchSheet.getRange(bRow, 4).setValue(newDate);
+            if (rawNewSlot) branchSheet.getRange(bRow, 5).setValue("'" + rawNewSlot);
+            if (body.guests !== undefined) {
+              const g = parseInt(body.guests, 10);
+              if (!isNaN(g) && g >= 1) branchSheet.getRange(bRow, 11).setValue(g);
+            }
+            if (body.occasion) branchSheet.getRange(bRow, 10).setValue(body.occasion.toString().trim());
+            if (body.additional_requirements !== undefined || body.additionalRequirements !== undefined) {
+              const req = (body.additional_requirements || body.additionalRequirements || '').toString().trim();
+              branchSheet.getRange(bRow, 12).setValue(req);
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Flush spreadsheet updates
+  SpreadsheetApp.flush();
+
+  // Invalidate slot cache for both previous date and new date
+  if (targetLocationCode) {
+    if (curDate) invalidateAvailabilityCache(targetLocationCode, curDate);
+    if (newDate && newDate !== curDate) invalidateAvailabilityCache(targetLocationCode, newDate);
+  }
+
+  return jsonResponse({
+    success: true,
+    bookingId: bookingId,
+    message: "Celebration booking details updated successfully!",
+    updated: {
+      date: newDate || curDate,
+      timeSlot: rawNewSlot || curSlotNorm,
+      guests: body.guests,
+      occasion: body.occasion
+    }
   });
 }
 

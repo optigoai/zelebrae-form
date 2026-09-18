@@ -49,7 +49,6 @@ export const Header: React.FC<HeaderProps> = ({
           />
           <div className="brand-info">
             <span className="brand-title">Zelebrae</span>
-            <span className="brand-subtitle">Celebration Point</span>
           </div>
         </div>
 
@@ -59,11 +58,11 @@ export const Header: React.FC<HeaderProps> = ({
               type="button"
               className="btn btn-manage-header"
               onClick={onOpenManageBookings}
-              title="Look up and manage your celebration bookings"
-              aria-label="Check Booking"
+              title="Look up, reschedule, or cancel your celebration bookings"
+              aria-label="Cancel or Edit Booking"
             >
               <CalendarCheck size={15} strokeWidth={2.2} />
-              <span>Cancel Booking</span>
+              <span>Cancel / Edit Booking</span>
             </button>
           )}
 

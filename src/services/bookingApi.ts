@@ -1,6 +1,6 @@
-import { AppConfig, BookingApiResponse, BookingState, AvailabilityResponse, ManageableBooking } from '../types/booking';
+import { AppConfig, BookingApiResponse, BookingState, AvailabilityResponse, ManageableBooking, EditBookingPayload, EditBookingResponse } from '../types/booking';
 import { DEFAULT_APP_CONFIG, STANDARD_TIME_SLOTS } from '../config/constants';
-import { getKolkataToday, normalizeSlotTime, isCancellationAllowed, addDays, isPastSlot } from '../utils/dateUtils';
+import { getKolkataToday, normalizeSlotTime, isCancellationAllowed, addDays, isPastSlot, isPastDate } from '../utils/dateUtils';
 
 const API_ENDPOINT = import.meta.env.VITE_BOOKING_API_URL?.trim() || '';
 
@@ -13,8 +13,16 @@ interface MockBookingItem {
   date: string;
   timeSlot: string;
   name: string;
+  customerLocation?: string;
   whatsapp: string;
+  email?: string;
+  occasion?: string;
+  guests?: number;
+  additionalRequirements?: string;
+  amenities?: string;
+  combo?: string;
   status: 'confirmed' | 'cancelled';
+  createdAt?: string;
 }
 
 function getStoredMockBookings(): MockBookingItem[] {
@@ -111,13 +119,61 @@ function getStoredMockBookings(): MockBookingItem[] {
 
 function saveMockBooking(booking: MockBookingItem) {
   const current = getStoredMockBookings();
-  current.push(booking);
+  const index = current.findIndex(b => b.id === booking.id);
+  if (index !== -1) {
+    current[index] = { ...current[index], ...booking };
+  } else {
+    current.push(booking);
+  }
   try {
     sessionStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(current));
   } catch (e) {
     // Ignore
   }
 }
+
+// ---------------------------------------------------------------------------
+// High-Performance In-Memory & Session Slot Cache
+// Eliminates repetitive network calls and makes date navigation instantaneous (0ms)
+// ---------------------------------------------------------------------------
+interface CachedSlotsEntry {
+  availableSlots: string[];
+  allSlots?: { time: string; available: boolean }[];
+  timestamp: number;
+}
+
+const slotCache = new Map<string, CachedSlotsEntry>();
+const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+const REVALIDATE_AFTER_MS = 45 * 1000; // 45 seconds before background soft-revalidation
+const inFlightRequests = new Map<string, Promise<AvailabilityResponse>>();
+const SESSION_CACHE_PREFIX = 'zb_slots_';
+
+function getCacheKey(location: string, date: string): string {
+  return `${(location || '').toLowerCase().trim()}_${(date || '').trim()}`;
+}
+
+function getFromSessionCache(location: string, date: string): CachedSlotsEntry | null {
+  try {
+    const raw = sessionStorage.getItem(`${SESSION_CACHE_PREFIX}${getCacheKey(location, date)}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp > CACHE_TTL_MS) {
+      sessionStorage.removeItem(`${SESSION_CACHE_PREFIX}${getCacheKey(location, date)}`);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveToSessionCache(location: string, date: string, entry: CachedSlotsEntry) {
+  try {
+    sessionStorage.setItem(`${SESSION_CACHE_PREFIX}${getCacheKey(location, date)}`, JSON.stringify(entry));
+  } catch {}
+}
+
+export type SlotStatus = 'current' | 'available' | 'passed' | 'booked';
 
 export const bookingApi = {
   isOfflineMode(): boolean {
@@ -129,17 +185,159 @@ export const bookingApi = {
   },
 
   /**
+   * Helper to classify a slot's availability status accurately
+   */
+  classifySlot(
+    slotTime: string,
+    targetDate: string,
+    availableSlots: string[],
+    currentBookingSlot?: string
+  ): SlotStatus {
+    const norm = normalizeSlotTime(slotTime);
+    if (currentBookingSlot && normalizeSlotTime(currentBookingSlot) === norm) {
+      return 'current';
+    }
+    if (isPastSlot(targetDate, slotTime)) {
+      return 'passed';
+    }
+    const isAvail = availableSlots.some(s => normalizeSlotTime(s) === norm);
+    return isAvail ? 'available' : 'booked';
+  },
+
+  /**
+   * Synchronously checks if slot availability for (location, date) is already cached in memory or session.
+   * Enables 0ms instantaneous slot rendering when clicking dates!
+   */
+  getCachedSlots(location: string, date: string): string[] | null {
+    if (!location || !date) return null;
+    const key = getCacheKey(location, date);
+    let entry = slotCache.get(key);
+    if (!entry) {
+      const sessionEntry = getFromSessionCache(location, date);
+      if (sessionEntry) {
+        slotCache.set(key, sessionEntry);
+        entry = sessionEntry;
+      }
+    }
+    if (!entry) return null;
+    const now = Date.now();
+    if (now - entry.timestamp > CACHE_TTL_MS) {
+      slotCache.delete(key);
+      return null;
+    }
+    return entry.availableSlots;
+  },
+
+  /**
+   * Silently pre-fetches availability for upcoming dates in the background
+   * so navigating to next days is instant. Supports batch fetching for maximum speed.
+   */
+  async prefetchSlots(location: string, dates: string[]): Promise<void> {
+    if (!location || !Array.isArray(dates) || dates.length === 0) return;
+    const now = Date.now();
+    const uncachedDates = dates.filter(d => {
+      if (!d || isPastDate(d)) return false;
+      const key = getCacheKey(location, d);
+      const cached = slotCache.get(key) || getFromSessionCache(location, d);
+      if (cached && (now - cached.timestamp < REVALIDATE_AFTER_MS)) {
+        if (!slotCache.has(key)) slotCache.set(key, cached);
+        return false; // Already cached and fresh
+      }
+      if (inFlightRequests.has(key)) return false;
+      return true;
+    });
+
+    if (uncachedDates.length === 0) return;
+
+    // High-speed batch query if multiple dates requested and endpoint is live
+    if (API_ENDPOINT && uncachedDates.length > 1) {
+      try {
+        const url = `${API_ENDPOINT}?action=getAvailabilityBatch&location=${encodeURIComponent(location)}&dates=${encodeURIComponent(uncachedDates.join(','))}&_t=${Date.now()}`;
+        const res = await fetch(url, {
+          method: 'GET',
+          redirect: 'follow',
+          credentials: 'omit',
+          cache: 'no-store',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success && data.dates) {
+            Object.entries(data.dates).forEach(([d, slots]: [string, any]) => {
+              if (Array.isArray(slots)) {
+                const normSlots = slots.map(normalizeSlotTime).filter(s => Boolean(s) && !isPastSlot(d, s));
+                const entry: CachedSlotsEntry = {
+                  availableSlots: normSlots,
+                  timestamp: Date.now()
+                };
+                slotCache.set(getCacheKey(location, d), entry);
+                saveToSessionCache(location, d, entry);
+              }
+            });
+            return;
+          }
+        }
+      } catch {
+        // Fallback to individual calls below
+      }
+    }
+
+    // Individual pre-fetches
+    uncachedDates.forEach(d => {
+      this.fetchAvailableSlots(location, d).catch(() => {});
+    });
+  },
+
+  /**
+   * Invalidates slot cache for a location and date (used after booking, cancelling or editing)
+   */
+  invalidateSlotCache(location?: string, date?: string): void {
+    if (location && date) {
+      const key = getCacheKey(location, date);
+      slotCache.delete(key);
+      try {
+        sessionStorage.removeItem(`${SESSION_CACHE_PREFIX}${key}`);
+      } catch {}
+    } else if (location) {
+      const prefix = `${location.toLowerCase().trim()}_`;
+      for (const k of slotCache.keys()) {
+        if (k.startsWith(prefix)) slotCache.delete(k);
+      }
+      try {
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+          const k = sessionStorage.key(i);
+          if (k && k.startsWith(`${SESSION_CACHE_PREFIX}${prefix}`)) {
+            sessionStorage.removeItem(k);
+          }
+        }
+      } catch {}
+    } else {
+      slotCache.clear();
+      try {
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+          const k = sessionStorage.key(i);
+          if (k && k.startsWith(SESSION_CACHE_PREFIX)) {
+            sessionStorage.removeItem(k);
+          }
+        }
+      } catch {}
+    }
+  },
+
+  /**
    * Fetches dynamic configuration (locations, combos, amenities, settings)
    */
   async fetchConfig(): Promise<AppConfig> {
     if (!API_ENDPOINT) {
-      // Return default config immediately
       return DEFAULT_APP_CONFIG;
     }
 
     try {
       const res = await fetch(`${API_ENDPOINT}?action=getConfig`, {
         method: 'GET',
+        redirect: 'follow',
+        credentials: 'omit',
+        cache: 'no-store',
         headers: { 'Accept': 'application/json' }
       });
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);
@@ -158,50 +356,114 @@ export const bookingApi = {
   },
 
   /**
-   * Fetches available slots for a given location and date
+   * Fetches available slots for a given location and date with instant caching & request deduplication
    */
-  async fetchAvailableSlots(location: string, date: string): Promise<AvailabilityResponse> {
-    if (!API_ENDPOINT) {
-      // Simulate network latency (250ms)
-      await new Promise(r => setTimeout(r, 280));
+  async fetchAvailableSlots(location: string, date: string, forceRefresh = false): Promise<AvailabilityResponse> {
+    const key = getCacheKey(location, date);
+    const now = Date.now();
+    const cached = slotCache.get(key);
 
-      const booked = getStoredMockBookings().filter(
-        b => b.location === location && b.date === date && b.status === 'confirmed'
-      );
-      const bookedTimes = new Set(booked.map(b => b.timeSlot));
-
-      const availableSlots = STANDARD_TIME_SLOTS
-        .filter(s => !bookedTimes.has(s.time) && !isPastSlot(date, s.time))
-        .map(s => s.time);
-
+    // 1. Return immediately from cache if available and fresh
+    if (!forceRefresh && cached && (now - cached.timestamp < CACHE_TTL_MS)) {
+      // Soft background revalidation if data is older than REVALIDATE_AFTER_MS
+      if (now - cached.timestamp > REVALIDATE_AFTER_MS && !inFlightRequests.has(key)) {
+        this.fetchAvailableSlots(location, date, true).catch(() => {});
+      }
       return {
         success: true,
         location,
         date,
-        availableSlots,
-        allSlots: STANDARD_TIME_SLOTS.map(s => ({
-          time: s.time,
-          available: !bookedTimes.has(s.time) && !isPastSlot(date, s.time)
-        }))
+        availableSlots: cached.availableSlots,
+        allSlots: cached.allSlots
       };
     }
 
-    try {
-      const url = `${API_ENDPOINT}?action=getAvailability&location=${encodeURIComponent(location)}&date=${encodeURIComponent(date)}&_t=${Date.now()}`;
-      const res = await fetch(url);
-
-      if (!res.ok) throw new Error(`Network response error ${res.status}`);
-      const data: AvailabilityResponse = await res.json();
-      if (data && Array.isArray(data.availableSlots)) {
-        data.availableSlots = data.availableSlots
-          .map(normalizeSlotTime)
-          .filter(slot => Boolean(slot) && !isPastSlot(date, slot));
-      }
-      return data;
-    } catch (err: any) {
-      console.error('Fetch availability error:', err);
-      throw new Error(err.message || 'Unable to connect to booking availability server.');
+    // 2. Request deduplication: reuse in-flight promise if currently fetching
+    if (inFlightRequests.has(key)) {
+      return inFlightRequests.get(key)!;
     }
+
+    // 3. Initiate fetch promise
+    const fetchPromise = (async () => {
+      try {
+        if (!API_ENDPOINT) {
+          await new Promise(r => setTimeout(r, 180));
+
+          const booked = getStoredMockBookings().filter(
+            b => b.location === location && b.date === date && b.status === 'confirmed'
+          );
+          const bookedTimes = new Set(booked.map(b => b.timeSlot));
+
+          const availableSlots = STANDARD_TIME_SLOTS
+            .filter(s => !bookedTimes.has(s.time) && !isPastSlot(date, s.time))
+            .map(s => s.time);
+
+          const result: AvailabilityResponse = {
+            success: true,
+            location,
+            date,
+            availableSlots,
+            allSlots: STANDARD_TIME_SLOTS.map(s => ({
+              time: s.time,
+              available: !bookedTimes.has(s.time) && !isPastSlot(date, s.time)
+            }))
+          };
+
+          slotCache.set(key, {
+            availableSlots: result.availableSlots,
+            allSlots: result.allSlots,
+            timestamp: Date.now()
+          });
+
+          return result;
+        }
+
+        const url = `${API_ENDPOINT}?action=getAvailability&location=${encodeURIComponent(location)}&date=${encodeURIComponent(date)}&_t=${Date.now()}`;
+        const res = await fetch(url, {
+          method: 'GET',
+          redirect: 'follow',
+          credentials: 'omit',
+          cache: 'no-store',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (!res.ok) throw new Error(`Network response error ${res.status}`);
+        const data: AvailabilityResponse = await res.json();
+        if (data && Array.isArray(data.availableSlots)) {
+          data.availableSlots = data.availableSlots
+            .map(normalizeSlotTime)
+            .filter(slot => Boolean(slot) && !isPastSlot(date, slot));
+        }
+
+        const slotEntry: CachedSlotsEntry = {
+          availableSlots: data.availableSlots || [],
+          allSlots: data.allSlots,
+          timestamp: Date.now()
+        };
+        slotCache.set(key, slotEntry);
+        saveToSessionCache(location, date, slotEntry);
+
+        return data;
+      } catch (err: any) {
+        console.error('Fetch availability error:', err);
+        // Fallback to cached if available
+        if (cached) {
+          return {
+            success: true,
+            location,
+            date,
+            availableSlots: cached.availableSlots,
+            allSlots: cached.allSlots
+          };
+        }
+        throw new Error(err.message || 'Unable to connect to booking availability server.');
+      } finally {
+        inFlightRequests.delete(key);
+      }
+    })();
+
+    inFlightRequests.set(key, fetchPromise);
+    return fetchPromise;
   },
 
   /**
@@ -223,7 +485,6 @@ export const bookingApi = {
             : state.combo),
       name: state.name.trim(),
       customer_location: state.customerLocation.trim(),
-      // Prefix with single quote ' so Google Sheets treats it strictly as text literal and never parses + as formula error
       whatsapp: `'${state.countryCode} ${state.whatsapp.trim()}`,
       email: state.email.trim(),
       additional_requirements: state.additionalRequirements.trim(),
@@ -234,10 +495,8 @@ export const bookingApi = {
     };
 
     if (!API_ENDPOINT) {
-      // Realistic simulation with server-side collision check
-      await new Promise(r => setTimeout(r, 750));
+      await new Promise(r => setTimeout(r, 650));
 
-      // Check if slot time has already passed
       if (isPastSlot(state.date, state.timeSlot)) {
         return {
           success: false,
@@ -246,7 +505,6 @@ export const bookingApi = {
         };
       }
 
-      // Simulate lock & race check
       const currentBookings = getStoredMockBookings();
       const collision = currentBookings.find(
         b => b.location === state.location && b.date === state.date && b.timeSlot === state.timeSlot && b.status === 'confirmed'
@@ -270,9 +528,19 @@ export const bookingApi = {
         date: state.date,
         timeSlot: state.timeSlot,
         name: state.name,
+        customerLocation: state.customerLocation,
         whatsapp: `${state.countryCode} ${state.whatsapp}`,
-        status: 'confirmed'
+        email: state.email,
+        occasion: state.occasion,
+        guests: state.guests,
+        additionalRequirements: state.additionalRequirements,
+        amenities: state.amenities.join(', '),
+        combo: state.combo,
+        status: 'confirmed',
+        createdAt: new Date().toISOString()
       });
+
+      this.invalidateSlotCache(state.location, state.date);
 
       return {
         success: true,
@@ -285,12 +553,13 @@ export const bookingApi = {
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
-      // Notice: We send as text/plain with JSON body to eliminate CORS preflight rejection in Google Apps Script!
       const res = await fetch(API_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain;charset=utf-8'
         },
+        credentials: 'omit',
+        redirect: 'follow',
         body: JSON.stringify(payload),
         signal: controller.signal
       });
@@ -298,6 +567,30 @@ export const bookingApi = {
 
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const data: BookingApiResponse = await res.json();
+
+      if (data.success && data.bookingId) {
+        // Record in session store for immediate lookup & fallback
+        saveMockBooking({
+          id: data.bookingId,
+          location: state.location,
+          date: state.date,
+          timeSlot: state.timeSlot,
+          name: state.name.trim(),
+          customerLocation: state.customerLocation.trim(),
+          whatsapp: `${state.countryCode} ${state.whatsapp.trim()}`,
+          email: state.email.trim(),
+          occasion: state.occasion,
+          guests: state.guests,
+          additionalRequirements: state.additionalRequirements.trim(),
+          amenities: state.amenities.join(', '),
+          combo: state.combo,
+          status: 'confirmed',
+          createdAt: new Date().toISOString()
+        });
+
+        this.invalidateSlotCache(state.location, state.date);
+      }
+
       return data;
     } catch (err: any) {
       clearTimeout(timeoutId);
@@ -310,7 +603,8 @@ export const bookingApi = {
   },
 
   /**
-   * Fetch all bookings associated with a specific mobile number
+   * Fetch all bookings associated with a specific mobile number.
+   * Handles 404, redirects and network dropouts gracefully by merging with session storage.
    */
   async fetchBookingsByPhone(phone: string): Promise<ManageableBooking[]> {
     const cleanPhone = (phone || '').replace(/\D/g, '');
@@ -320,41 +614,165 @@ export const bookingApi = {
       throw new Error('Please enter a valid mobile number.');
     }
 
-    if (!API_ENDPOINT) {
-      // Fallback: Read from local mock session store
-      await new Promise(r => setTimeout(r, 450));
-      const mockList = getStoredMockBookings();
-      const matched = mockList.filter(b => {
+    // 1. Gather any matching local session bookings
+    const localList = getStoredMockBookings();
+    const localMatches: ManageableBooking[] = localList
+      .filter(b => {
         const itemPhone = (b.whatsapp || '').replace(/\D/g, '');
-        return itemPhone.includes(phoneSuffix) || cleanPhone.includes(itemPhone.slice(-10));
-      });
-
-      return matched.map(m => ({
+        const itemSuffix = itemPhone.length >= 10 ? itemPhone.slice(-10) : itemPhone;
+        return itemSuffix === phoneSuffix || itemPhone.includes(phoneSuffix) || cleanPhone.includes(itemSuffix);
+      })
+      .map(m => ({
         bookingId: m.id,
-        createdAt: new Date().toISOString(),
+        createdAt: m.createdAt || new Date().toISOString(),
         location: m.location,
         date: m.date,
         timeSlot: m.timeSlot,
         name: m.name,
+        customerLocation: m.customerLocation,
         whatsapp: m.whatsapp,
-        occasion: 'Birthday',
-        guests: 4,
+        email: m.email,
+        occasion: m.occasion || 'Celebration',
+        guests: m.guests || 4,
+        additionalRequirements: m.additionalRequirements,
+        amenities: m.amenities,
+        combo: m.combo,
         status: m.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED'
       }));
+
+    if (!API_ENDPOINT) {
+      await new Promise(r => setTimeout(r, 350));
+      return localMatches;
+    }
+
+    // 2. Fetch from Google Apps Script Web App
+    try {
+      const url = `${API_ENDPOINT}?action=getBookingsByPhone&phone=${encodeURIComponent(cleanPhone)}&_t=${Date.now()}`;
+      const res = await fetch(url, {
+        method: 'GET',
+        redirect: 'follow',
+        credentials: 'omit',
+        cache: 'no-store',
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!res.ok) {
+        console.warn(`Remote booking fetch returned HTTP ${res.status}. Falling back to local storage.`);
+        return localMatches;
+      }
+
+      const data = await res.json();
+      if (!data.success) {
+        console.warn('Remote booking search returned unsuccessful:', data.error);
+        return localMatches;
+      }
+
+      const remoteBookings: ManageableBooking[] = data.bookings || [];
+
+      // Merge remote & local records, deduplicating by bookingId (prefer remote status)
+      const mergedMap = new Map<string, ManageableBooking>();
+      localMatches.forEach(b => mergedMap.set(b.bookingId, b));
+      remoteBookings.forEach(b => mergedMap.set(b.bookingId, b));
+
+      return Array.from(mergedMap.values()).sort((a, b) => {
+        return (b.date || '').localeCompare(a.date || '');
+      });
+    } catch (err: any) {
+      console.warn('Fetch bookings network glitch, using local records:', err);
+      if (localMatches.length > 0) {
+        return localMatches;
+      }
+      throw new Error('Unable to connect to booking records. Please check your internet connection or try again.');
+    }
+  },
+
+  /**
+   * Edit / Reschedule an active booking
+   */
+  async editBooking(payload: EditBookingPayload): Promise<EditBookingResponse> {
+    const { bookingId, phone, date, timeSlot, guests, occasion, additionalRequirements } = payload;
+    const cleanPhone = (phone || '').replace(/\D/g, '');
+
+    if (!bookingId || !cleanPhone) {
+      throw new Error('Booking ID and registered mobile number are required to edit.');
+    }
+
+    // Update local session store for instant synchronization
+    const localList = getStoredMockBookings();
+    const target = localList.find(b => b.id === bookingId);
+    let oldLocation = '';
+    let oldDate = '';
+
+    if (target) {
+      oldLocation = target.location;
+      oldDate = target.date;
+      if (date && timeSlot && (date !== target.date || timeSlot !== target.timeSlot)) {
+        const eligibility = isCancellationAllowed(target.date, target.timeSlot);
+        if (!eligibility.allowed) {
+          throw new Error(eligibility.reason || 'Cannot reschedule because it has passed the required advance notice for this slot.');
+        }
+      }
+      if (date) target.date = date;
+      if (timeSlot) target.timeSlot = timeSlot;
+      if (guests) target.guests = guests;
+      if (occasion) target.occasion = occasion;
+      if (additionalRequirements !== undefined) target.additionalRequirements = additionalRequirements;
+      sessionStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(localList));
+    }
+
+    if (!API_ENDPOINT) {
+      await new Promise(r => setTimeout(r, 450));
+      if (oldLocation && (oldDate || date)) {
+        this.invalidateSlotCache(oldLocation, oldDate);
+        if (date) this.invalidateSlotCache(oldLocation, date);
+      }
+      return {
+        success: true,
+        bookingId,
+        message: 'Your celebration booking has been successfully updated!'
+      };
     }
 
     try {
-      const url = `${API_ENDPOINT}?action=getBookingsByPhone&phone=${encodeURIComponent(cleanPhone)}&_t=${Date.now()}`;
-      const res = await fetch(url);
+      const res = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        credentials: 'omit',
+        redirect: 'follow',
+        body: JSON.stringify({
+          action: 'editBooking',
+          bookingId,
+          phone: cleanPhone,
+          date,
+          time_slot: timeSlot ? `'${timeSlot}` : undefined,
+          timeSlot,
+          guests,
+          occasion,
+          additional_requirements: additionalRequirements
+        })
+      });
+
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const data = await res.json();
       if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch bookings');
+        throw new Error(data.message || data.error || 'Failed to update booking.');
       }
-      return data.bookings || [];
+
+      if (oldLocation && (oldDate || date)) {
+        this.invalidateSlotCache(oldLocation, oldDate);
+        if (date) this.invalidateSlotCache(oldLocation, date);
+      }
+
+      return {
+        success: true,
+        bookingId,
+        message: data.message || 'Celebration booking successfully updated!'
+      };
     } catch (err: any) {
-      console.error('Fetch bookings by phone error:', err);
-      throw new Error(err.message || 'Could not retrieve bookings. Please check your internet connection.');
+      console.error('Edit booking error:', err);
+      throw new Error(err.message || 'Failed to update booking. Please contact Zelebrae directly on WhatsApp.');
     }
   },
 
@@ -368,26 +786,28 @@ export const bookingApi = {
       throw new Error('Booking ID and mobile number are required to cancel.');
     }
 
-    if (!API_ENDPOINT) {
-      // Fallback: Update mock session store
-      await new Promise(r => setTimeout(r, 500));
-      const mockList = getStoredMockBookings();
-      const target = mockList.find(b => b.id === bookingId);
-      if (target) {
-        const eligibility = isCancellationAllowed(target.date, target.timeSlot);
-        if (!eligibility.allowed) {
-          throw new Error(eligibility.reason || 'Cannot cancel because it has passed the minimum 2-hour required notice for cancellation.');
-        }
+    // Invalidate local cache and update session store
+    const localList = getStoredMockBookings();
+    const target = localList.find(b => b.id === bookingId);
+    let targetLoc = '';
+    let targetDate = '';
+
+    if (target) {
+      targetLoc = target.location;
+      targetDate = target.date;
+      const eligibility = isCancellationAllowed(target.date, target.timeSlot);
+      if (!eligibility.allowed) {
+        throw new Error(eligibility.reason || 'Cannot cancel because it has passed the minimum 2-hour required notice for cancellation.');
       }
+      target.status = 'cancelled';
+      sessionStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(localList));
+    }
 
-      const updated = mockList.map(b => {
-        if (b.id === bookingId) {
-          return { ...b, status: 'cancelled' as const };
-        }
-        return b;
-      });
-      sessionStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(updated));
-
+    if (!API_ENDPOINT) {
+      await new Promise(r => setTimeout(r, 450));
+      if (targetLoc && targetDate) {
+        this.invalidateSlotCache(targetLoc, targetDate);
+      }
       return {
         success: true,
         bookingId,
@@ -407,6 +827,8 @@ export const bookingApi = {
         headers: {
           'Content-Type': 'text/plain;charset=utf-8'
         },
+        credentials: 'omit',
+        redirect: 'follow',
         body: JSON.stringify(payload)
       });
 
@@ -414,6 +836,10 @@ export const bookingApi = {
       const data = await res.json();
       if (!data.success) {
         throw new Error(data.message || data.error || 'Cancellation could not be completed.');
+      }
+
+      if (targetLoc && targetDate) {
+        this.invalidateSlotCache(targetLoc, targetDate);
       }
 
       return data;

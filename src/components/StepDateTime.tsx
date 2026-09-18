@@ -42,32 +42,60 @@ export const StepDateTime: React.FC<StepDateTimeProps> = ({
   const [isLoadingSlots, setIsLoadingSlots] = useState<boolean>(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Fetch slots whenever selectedDate changes
+  // Fetch slots whenever selectedDate changes with 0ms instant cache display & background prefetch
   const loadSlots = async (date: string) => {
     if (!date) return;
-    setIsLoadingSlots(true);
-    setFetchError(null);
+
+    // 1. Check synchronous cache first: 0ms instant display!
+    const cached = bookingApi.getCachedSlots(location, date);
+    if (cached) {
+      setAvailableSlots(cached);
+      setIsLoadingSlots(false);
+      setFetchError(null);
+      const normSelected = normalizeSlotTime(selectedSlot);
+      const isStillAvailable = cached.some(s => normalizeSlotTime(s) === normSelected);
+      if (selectedSlot && (!isStillAvailable || isPastSlot(date, selectedSlot))) {
+        onSelectSlot('');
+      }
+    } else {
+      setIsLoadingSlots(true);
+      setFetchError(null);
+    }
+
+    // 2. Prefetch upcoming adjacent days in background for instant navigation
+    const nextDays = [addDays(date, 1), addDays(date, 2), addDays(date, 3)];
+    bookingApi.prefetchSlots(location, nextDays);
+
+    // 3. Request live data
     try {
       const res = await bookingApi.fetchAvailableSlots(location, date);
       if (res.success) {
         setAvailableSlots(res.availableSlots || []);
-        // If previously selected slot is no longer available or has passed on this date, clear selection
         const normSelected = normalizeSlotTime(selectedSlot);
         const isStillAvailable = (res.availableSlots || []).some(s => normalizeSlotTime(s) === normSelected);
         if (selectedSlot && (!isStillAvailable || isPastSlot(date, selectedSlot))) {
           onSelectSlot('');
         }
       } else {
-        setFetchError(res.error || 'Failed to fetch slots for this date.');
-        setAvailableSlots([]);
+        if (!cached) {
+          setFetchError(res.error || 'Failed to fetch slots for this date.');
+          setAvailableSlots([]);
+        }
       }
     } catch (err: any) {
-      setFetchError(err.message || 'Unable to connect to booking availability.');
-      setAvailableSlots([]);
+      if (!cached) {
+        setFetchError(err.message || 'Unable to connect to booking availability.');
+        setAvailableSlots([]);
+      }
     } finally {
       setIsLoadingSlots(false);
     }
   };
+
+  // Prefetch upcoming days on location change
+  useEffect(() => {
+    bookingApi.prefetchSlots(location, [todayStr, addDays(todayStr, 1), addDays(todayStr, 2)]);
+  }, [location]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -126,7 +154,36 @@ export const StepDateTime: React.FC<StepDateTimeProps> = ({
           Step 3 of 5
         </span>
         <h1 className="step-title">Select Date & Time</h1>
+      </div>
 
+      {/* Quick 1-Tap Date Navigation Bar */}
+      <div className="quick-dates-container">
+        <div className="quick-dates-scroll">
+          {[
+            { label: 'Today', date: todayStr, sub: formatCelebrationDate(todayStr).split(',')[0] },
+            { label: 'Tomorrow', date: addDays(todayStr, 1), sub: formatCelebrationDate(addDays(todayStr, 1)).split(',')[0] },
+            { label: 'In 2 Days', date: addDays(todayStr, 2), sub: formatCelebrationDate(addDays(todayStr, 2)).split(',')[0] },
+            { label: 'In 3 Days', date: addDays(todayStr, 3), sub: formatCelebrationDate(addDays(todayStr, 3)).split(',')[0] }
+          ].map(item => {
+            const isSelected = selectedDate === item.date;
+            return (
+              <button
+                key={item.date}
+                type="button"
+                className={`quick-date-chip ${isSelected ? 'active' : ''}`}
+                onClick={() => {
+                  onSelectDate(item.date);
+                  const [y, m] = item.date.split('-').map(Number);
+                  setViewYear(y);
+                  setViewMonth(m - 1);
+                }}
+              >
+                <span className="chip-primary">{item.label}</span>
+                <span className="chip-secondary">{item.sub}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Calendar Card */}
