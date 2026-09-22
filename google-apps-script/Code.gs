@@ -888,8 +888,49 @@ function jsonResponse(obj) {
  * 3. In branch sheets only: non-destructively hides rows where celebration date
  *    has passed (< today in Asia/Kolkata). Zero data is ever deleted or modified.
  * 4. Central Master Sheet keeps ALL past and future bookings visible.
+ * 5. Includes onEdit(e) & onChange(e) automatic triggers for instant sorting.
  * ============================================================================
  */
+
+/**
+ * Parses any date format (Date object, YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY, etc.)
+ * into a canonical YYYY-MM-DD string for exact chronological comparison.
+ * Never alters or mutates the cell value in the sheet.
+ */
+function parseDateToYMD(val) {
+  if (!val) return '';
+  if (val instanceof Date || (typeof val === 'object' && typeof val.getTime === 'function')) {
+    if (!isNaN(val.getTime())) {
+      return Utilities.formatDate(val, TIMEZONE, "yyyy-MM-dd");
+    }
+  }
+  var str = (val || '').toString().trim();
+  if (!str) return '';
+
+  // Match YYYY-MM-DD or YYYY/MM/DD
+  var mYMD = str.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+  if (mYMD) {
+    var y = mYMD[1];
+    var m = ("0" + mYMD[2]).slice(-2);
+    var d = ("0" + mYMD[3]).slice(-2);
+    return y + "-" + m + "-" + d;
+  }
+
+  // Match DD-MM-YYYY or DD/MM/YYYY
+  var mDMY = str.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
+  if (mDMY) {
+    var d = ("0" + mDMY[1]).slice(-2);
+    var m = ("0" + mDMY[2]).slice(-2);
+    var y = mDMY[3];
+    return y + "-" + m + "-" + d;
+  }
+
+  var parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return Utilities.formatDate(parsed, TIMEZONE, "yyyy-MM-dd");
+  }
+  return str;
+}
 
 /**
  * Converts any time slot string into minutes from midnight for exact 24-hr time comparisons.
@@ -913,41 +954,47 @@ function slotToMinutes(val) {
 
 /**
  * Chronologically sorts a booking sheet by Celebration Date (Col D) and Celebration Time (Col E).
- * Uses Google Sheets native range.sort() via a temporary hidden helper column that is immediately cleared.
+ * Uses Google Sheets native range.sort() via a temporary helper column that is immediately cleared.
  * NEVER alters, mutates, or touches the contents of any cell in Columns A through P.
  */
 function sortBookingSheet(sheet, isBranchSheet) {
   if (!sheet) return;
   var lastRow = sheet.getLastRow();
-  if (lastRow <= 2) {
+  if (lastRow <= 1) return;
+  if (lastRow === 2) {
     if (isBranchSheet) {
       applyBranchDateFilter(sheet);
     }
     return;
   }
 
-  var numCols = Math.max(sheet.getLastColumn(), BOOKING_HEADERS.length);
+  var lastCol = sheet.getLastColumn();
+  if (lastCol < 5) return; // Must have at least Date (Col 4) and Time Slot (Col 5)
+
   var numDataRows = lastRow - 1;
-  var helperCol = numCols + 1;
+  var maxCols = sheet.getMaxColumns();
+  var helperCol = Math.max(lastCol, BOOKING_HEADERS.length) + 1;
+  var addedCol = false;
 
   try {
-    // Unhide rows temporarily to ensure clean sort
+    // 1. Unhide rows first so hidden rows do not cause sort misalignment
     sheet.showRows(2, numDataRows);
 
-    // Read dates (Col D / 4) and time slots (Col E / 5) ONLY to calculate row order
+    // 2. Ensure sheet has enough columns for the temporary helper sort key
+    if (maxCols < helperCol) {
+      sheet.insertColumnsAfter(maxCols, helperCol - maxCols);
+      addedCol = true;
+    }
+
+    // 3. Read Celebration Date (Col 4 / D) and Time Slot (Col 5 / E)
     var dateValues = sheet.getRange(2, 4, numDataRows, 1).getValues();
     var slotValues = sheet.getRange(2, 5, numDataRows, 1).getValues();
 
-    // Construct temporary chronological sort keys: YYYY-MM-DD_HHMM
+    // 4. Construct chronological sort keys: YYYY-MM-DD_HHMM
     var sortKeys = [];
     for (var i = 0; i < numDataRows; i++) {
       var d = dateValues[i][0];
-      var dStr = '';
-      if (d instanceof Date) {
-        dStr = Utilities.formatDate(d, TIMEZONE, "yyyy-MM-dd");
-      } else {
-        dStr = (d || '').toString().trim();
-      }
+      var dStr = parseDateToYMD(d);
       if (!dStr) dStr = '9999-99-99';
 
       var s = slotValues[i][0];
@@ -957,23 +1004,33 @@ function sortBookingSheet(sheet, isBranchSheet) {
       sortKeys.push([dStr + "_" + minStr]);
     }
 
-    // Temporarily write sort keys into helper column
+    // 5. Temporarily write sort keys into helper column
     sheet.getRange(2, helperCol, numDataRows, 1).setValues(sortKeys);
 
-    // Perform native Google Sheets sort across all columns using the helper key
-    // This physically moves entire rows together without touching or changing ANY cell data!
+    // 6. Perform native Google Sheets sort across all columns using the helper key
+    // Native sort physically moves rows without modifying ANY cell value or formatting
     sheet.getRange(2, 1, numDataRows, helperCol).sort([
       { column: helperCol, ascending: true }
     ]);
 
-    // Immediately clear the temporary helper column completely
-    sheet.getRange(2, helperCol, numDataRows, 1).clear();
-
+    // 7. Clean up temporary helper column
+    if (addedCol) {
+      sheet.deleteColumn(helperCol);
+    } else {
+      sheet.getRange(2, helperCol, numDataRows, 1).clear();
+    }
   } catch (err) {
     Logger.log("Sorting notice for " + sheet.getName() + ": " + err.toString());
+    try {
+      if (addedCol) {
+        sheet.deleteColumn(helperCol);
+      } else {
+        sheet.getRange(2, helperCol, numDataRows, 1).clear();
+      }
+    } catch (e) {}
   }
 
-  // If this is a branch sheet, apply the non-destructive past-date filter
+  // 8. If this is a branch sheet, apply the non-destructive past-date filter
   if (isBranchSheet) {
     applyBranchDateFilter(sheet);
   }
@@ -991,13 +1048,13 @@ function applyBranchDateFilter(sheet) {
 
   try {
     // 1. Unhide all rows first so nothing is permanently lost
-    sheet.showRows(2, lastRow - 1);
+    var numDataRows = lastRow - 1;
+    sheet.showRows(2, numDataRows);
 
     // 2. Current date in Kerala (Asia/Kolkata)
     var todayStr = Utilities.formatDate(new Date(), TIMEZONE, "yyyy-MM-dd");
 
-    // 3. Read dates in Column D
-    var numDataRows = lastRow - 1;
+    // 3. Read dates in Column D (Col 4)
     var dateValues = sheet.getRange(2, 4, numDataRows, 1).getValues();
 
     // 4. Batch-hide contiguous blocks of past rows
@@ -1005,13 +1062,7 @@ function applyBranchDateFilter(sheet) {
     var rangeCount = 0;
 
     for (var i = 0; i < numDataRows; i++) {
-      var d = dateValues[i][0];
-      var dStr = '';
-      if (d instanceof Date) {
-        dStr = Utilities.formatDate(d, TIMEZONE, "yyyy-MM-dd");
-      } else {
-        dStr = (d || '').toString().trim();
-      }
+      var dStr = parseDateToYMD(dateValues[i][0]);
 
       if (dStr && dStr < todayStr) {
         var rowNum = i + 2;
@@ -1102,6 +1153,54 @@ function sortAllSheetsAndFilterBranches() {
 }
 
 /**
+ * AUTO TRIGGER: Fires automatically whenever any cell is edited directly in this spreadsheet.
+ * Automatically sorts chronologically and filters past dates in branch tabs.
+ */
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    var sheet = e.range.getSheet();
+    var sheetName = sheet.getName();
+
+    var isBookingSheet = sheetName === "All Bookings" || 
+                         sheetName === "Bookings" || 
+                         LOCATION_SHEET_NAMES.indexOf(sheetName) !== -1;
+    if (!isBookingSheet) return;
+
+    var row = e.range.getRow();
+    if (row <= 1) return; // Don't sort when editing header row
+
+    var isBranch = sheetName !== "All Bookings" && sheetName !== "Bookings";
+    sortBookingSheet(sheet, isBranch);
+  } catch (err) {
+    Logger.log("onEdit notice: " + err.toString());
+  }
+}
+
+/**
+ * AUTO TRIGGER: Fires automatically when rows are inserted or pasted.
+ */
+function onChange(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) return;
+    var sheet = ss.getActiveSheet();
+    if (!sheet) return;
+    var sheetName = sheet.getName();
+
+    var isBookingSheet = sheetName === "All Bookings" || 
+                         sheetName === "Bookings" || 
+                         LOCATION_SHEET_NAMES.indexOf(sheetName) !== -1;
+    if (!isBookingSheet) return;
+
+    var isBranch = sheetName !== "All Bookings" && sheetName !== "Bookings";
+    sortBookingSheet(sheet, isBranch);
+  } catch (err) {
+    Logger.log("onChange notice: " + err.toString());
+  }
+}
+
+/**
  * Automatically creates custom menu in Google Sheets toolbar when opened
  */
 function onOpen(e) {
@@ -1112,6 +1211,8 @@ function onOpen(e) {
       .addSeparator()
       .addItem('📅 Filter Today & Upcoming Only (Hide Past Dates)', 'menuFilterTodayOnly')
       .addItem('👁️ Show All Bookings (Include Past Dates)', 'menuShowAllDates')
+      .addSeparator()
+      .addItem('⏰ Setup Daily Midnight Auto-Filter', 'setupDailyMidnightTrigger')
       .addToUi();
   } catch (err) {
     // onOpen can run without UI in web app execution context
