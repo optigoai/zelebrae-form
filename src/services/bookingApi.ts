@@ -690,7 +690,7 @@ export const bookingApi = {
    * Edit / Reschedule an active booking
    */
   async editBooking(payload: EditBookingPayload): Promise<EditBookingResponse> {
-    const { bookingId, phone, date, timeSlot, guests, occasion, additionalRequirements } = payload;
+    const { bookingId, phone, location, date, timeSlot, guests, occasion, additionalRequirements } = payload;
     const cleanPhone = (phone || '').replace(/\D/g, '');
 
     if (!bookingId || !cleanPhone) {
@@ -706,12 +706,13 @@ export const bookingApi = {
     if (target) {
       oldLocation = target.location;
       oldDate = target.date;
-      if (date && timeSlot && (date !== target.date || timeSlot !== target.timeSlot)) {
+      if (date && timeSlot && (date !== target.date || timeSlot !== target.timeSlot || (location && location !== target.location))) {
         const eligibility = isCancellationAllowed(target.date, target.timeSlot);
         if (!eligibility.allowed) {
           throw new Error(eligibility.reason || 'Cannot reschedule because it has passed the required advance notice for this slot.');
         }
       }
+      if (location) target.location = location;
       if (date) target.date = date;
       if (timeSlot) target.timeSlot = timeSlot;
       if (guests) target.guests = guests;
@@ -720,11 +721,14 @@ export const bookingApi = {
       sessionStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(localList));
     }
 
+    const finalLocation = location || oldLocation;
+
     if (!API_ENDPOINT) {
       await new Promise(r => setTimeout(r, 450));
-      if (oldLocation && (oldDate || date)) {
-        this.invalidateSlotCache(oldLocation, oldDate);
-        if (date) this.invalidateSlotCache(oldLocation, date);
+      if (oldLocation && oldDate) this.invalidateSlotCache(oldLocation, oldDate);
+      if (finalLocation && (oldDate || date)) {
+        this.invalidateSlotCache(finalLocation, oldDate);
+        if (date) this.invalidateSlotCache(finalLocation, date);
       }
       return {
         success: true,
@@ -745,6 +749,7 @@ export const bookingApi = {
           action: 'editBooking',
           bookingId,
           phone: cleanPhone,
+          location: finalLocation,
           date,
           time_slot: timeSlot ? `'${timeSlot}` : undefined,
           timeSlot,
@@ -760,9 +765,10 @@ export const bookingApi = {
         throw new Error(data.message || data.error || 'Failed to update booking.');
       }
 
-      if (oldLocation && (oldDate || date)) {
-        this.invalidateSlotCache(oldLocation, oldDate);
-        if (date) this.invalidateSlotCache(oldLocation, date);
+      if (oldLocation && oldDate) this.invalidateSlotCache(oldLocation, oldDate);
+      if (finalLocation && (oldDate || date)) {
+        this.invalidateSlotCache(finalLocation, oldDate);
+        if (date) this.invalidateSlotCache(finalLocation, date);
       }
 
       return {

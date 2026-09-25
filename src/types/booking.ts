@@ -130,6 +130,7 @@ export interface ManageableBooking {
 export interface EditBookingPayload {
   bookingId: string;
   phone: string;
+  location?: string;
   date?: string;
   timeSlot?: string;
   guests?: number;

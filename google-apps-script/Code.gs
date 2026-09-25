@@ -1849,7 +1849,21 @@ function handleEditBooking(body, masterSS) {
     });
   }
 
-  // 2. Validate Rescheduling / Date Change
+  // 2. Validate Location Change & Rescheduling
+  const rawNewLoc = (body.location || body.newLocation || '').toString().trim();
+  let newLocationCode = '';
+  if (rawNewLoc) {
+    for (const k in LOCATION_SHEET_MAP) {
+      if (LOCATION_SHEET_MAP[k].toLowerCase() === rawNewLoc.toLowerCase() || k === rawNewLoc.toLowerCase()) {
+        newLocationCode = k;
+        break;
+      }
+    }
+  }
+  const finalLocationCode = newLocationCode || targetLocationCode;
+  const finalLocationName = getLocationSheetName(finalLocationCode);
+  const locationChanged = Boolean(newLocationCode && newLocationCode !== targetLocationCode);
+
   const newDate = (body.date || '').toString().trim();
   const rawNewSlot = (body.time_slot || body.timeSlot || '').toString().trim().replace(/^'/, '');
   const newSlotNorm = rawNewSlot ? normalizeSlot(rawNewSlot) : '';
@@ -1860,9 +1874,11 @@ function handleEditBooking(body, masterSS) {
   }
   const curSlotNorm = normalizeSlot(existingRow[4]);
 
-  const dateOrSlotChanged = (newDate && newDate !== curDate) || (newSlotNorm && newSlotNorm !== curSlotNorm);
+  const dateOrSlotOrLocChanged = (newDate && newDate !== curDate) || 
+                                 (newSlotNorm && newSlotNorm !== curSlotNorm) || 
+                                 locationChanged;
 
-  if (dateOrSlotChanged) {
+  if (dateOrSlotOrLocChanged) {
     // Check advance notice rule for the old slot
     const checkNotice = isCancellationPermitted(curDate, curSlotNorm);
     if (!checkNotice.allowed) {
@@ -1887,17 +1903,33 @@ function handleEditBooking(body, masterSS) {
       });
     }
 
-    // Check collision with other bookings
-    if (isSlotAlreadyBooked(masterSS, targetLocationCode, finalDate, finalSlot)) {
+    // Check collision with other bookings in the target location
+    if (isSlotAlreadyBooked(masterSS, finalLocationCode, finalDate, finalSlot)) {
       return jsonResponse({
         success: false,
         error: "SLOT_OCCUPIED",
-        message: "The selected time slot is already booked. Please choose a different slot."
+        message: "The selected time slot is already booked at " + finalLocationName + ". Please choose a different slot."
+      });
+    }
+  }
+
+  // Check guest capacity limit for target location (Arakkinar max 6, others 15)
+  const locMaxCapacity = finalLocationCode === 'arakkinar' ? 6 : 15;
+  if (body.guests !== undefined) {
+    const requestedGuests = parseInt(body.guests, 10);
+    if (requestedGuests > locMaxCapacity) {
+      return jsonResponse({
+        success: false,
+        error: "EXCEEDS_CAPACITY",
+        message: "Maximum capacity for " + finalLocationName + " is " + locMaxCapacity + " guests."
       });
     }
   }
 
   // 3. Apply updates to Master Sheet
+  if (locationChanged) {
+    currentSheet.getRange(currentRowIndex, 3).setValue(finalLocationName); // Column C (location)
+  }
   if (newDate) {
     currentSheet.getRange(currentRowIndex, 4).setValue(newDate); // Column D (date)
   }
@@ -1906,7 +1938,7 @@ function handleEditBooking(body, masterSS) {
   }
   if (body.guests !== undefined) {
     const g = parseInt(body.guests, 10);
-    if (!isNaN(g) && g >= 1) currentSheet.getRange(currentRowIndex, 11).setValue(g); // Column K
+    if (!isNaN(g) && g >= 1) currentSheet.getRange(currentRowIndex, 11).setValue(Math.min(g, locMaxCapacity)); // Column K
   }
   if (body.occasion) {
     currentSheet.getRange(currentRowIndex, 10).setValue(body.occasion.toString().trim()); // Column J
@@ -1917,7 +1949,49 @@ function handleEditBooking(body, masterSS) {
   }
 
   // 4. Mirror updates to Branch's Dedicated Spreadsheet (if separate)
-  if (targetLocationCode) {
+  if (locationChanged) {
+    // A. Remove booking row from OLD branch sheet
+    const oldBranchSS = getLocationSpreadsheet(targetLocationCode);
+    let rowValuesToMove = null;
+    if (oldBranchSS && (!masterSS || oldBranchSS.getId() !== masterSS.getId())) {
+      const oldBranchSheet = getBookingTargetSheet(oldBranchSS, targetLocationCode);
+      if (oldBranchSheet) {
+        const oData = oldBranchSheet.getDataRange().getValues();
+        for (let i = 1; i < oData.length; i++) {
+          if ((oData[i][0] || '').toString().trim() === bookingId) {
+            rowValuesToMove = oData[i].slice();
+            oldBranchSheet.deleteRow(i + 1);
+            sortBookingSheet(oldBranchSheet, true);
+            break;
+          }
+        }
+      }
+    }
+
+    // B. Append booking row to NEW branch sheet
+    const newBranchSS = getLocationSpreadsheet(finalLocationCode);
+    if (newBranchSS && (!masterSS || newBranchSS.getId() !== masterSS.getId())) {
+      const newBranchSheet = getBookingTargetSheet(newBranchSS, finalLocationCode);
+      if (newBranchSheet) {
+        ensureHeaderColumns(newBranchSheet);
+        const updatedRow = rowValuesToMove || currentSheet.getRange(currentRowIndex, 1, 1, BOOKING_HEADERS.length).getValues()[0];
+        updatedRow[2] = finalLocationName; // Column C: Location
+        if (newDate) updatedRow[3] = newDate; // Column D: Date
+        if (rawNewSlot) updatedRow[4] = "'" + rawNewSlot; // Column E: Time Slot
+        if (body.occasion) updatedRow[9] = body.occasion.toString().trim(); // Column J: Occasion
+        if (body.guests !== undefined) {
+          const g = parseInt(body.guests, 10);
+          if (!isNaN(g) && g >= 1) updatedRow[10] = Math.min(g, locMaxCapacity); // Column K: Guests
+        }
+        if (body.additional_requirements !== undefined || body.additionalRequirements !== undefined) {
+          updatedRow[11] = (body.additional_requirements || body.additionalRequirements || '').toString().trim(); // Column L
+        }
+        newBranchSheet.appendRow(updatedRow);
+        sortBookingSheet(newBranchSheet, true);
+      }
+    }
+  } else if (targetLocationCode) {
+    // Location didn't change: update in place in same branch sheet
     const branchSS = getLocationSpreadsheet(targetLocationCode);
     if (branchSS && (!masterSS || branchSS.getId() !== masterSS.getId())) {
       const branchSheet = getBookingTargetSheet(branchSS, targetLocationCode);
@@ -1931,13 +2005,14 @@ function handleEditBooking(body, masterSS) {
             if (rawNewSlot) branchSheet.getRange(bRow, 5).setValue("'" + rawNewSlot);
             if (body.guests !== undefined) {
               const g = parseInt(body.guests, 10);
-              if (!isNaN(g) && g >= 1) branchSheet.getRange(bRow, 11).setValue(g);
+              if (!isNaN(g) && g >= 1) branchSheet.getRange(bRow, 11).setValue(Math.min(g, locMaxCapacity));
             }
             if (body.occasion) branchSheet.getRange(bRow, 10).setValue(body.occasion.toString().trim());
             if (body.additional_requirements !== undefined || body.additionalRequirements !== undefined) {
               const req = (body.additional_requirements || body.additionalRequirements || '').toString().trim();
               branchSheet.getRange(bRow, 12).setValue(req);
             }
+            sortBookingSheet(branchSheet, true);
             break;
           }
         }
@@ -1945,27 +2020,21 @@ function handleEditBooking(body, masterSS) {
     }
   }
 
-  // Re-sort sheets chronologically after editing
+  // Re-sort master sheet chronologically
   if (currentSheet) {
     sortBookingSheet(currentSheet, false);
-  }
-  if (targetLocationCode) {
-    const branchSS = getLocationSpreadsheet(targetLocationCode);
-    if (branchSS) {
-      const bSheet = getBookingTargetSheet(branchSS, targetLocationCode);
-      if (bSheet) {
-        sortBookingSheet(bSheet, true);
-      }
-    }
   }
 
   // Flush spreadsheet updates
   SpreadsheetApp.flush();
 
-  // Invalidate slot cache for both previous date and new date
-  if (targetLocationCode) {
-    if (curDate) invalidateAvailabilityCache(targetLocationCode, curDate);
-    if (newDate && newDate !== curDate) invalidateAvailabilityCache(targetLocationCode, newDate);
+  // Invalidate slot cache for both old location/date and new location/date
+  if (targetLocationCode && curDate) {
+    invalidateAvailabilityCache(targetLocationCode, curDate);
+  }
+  if (finalLocationCode) {
+    if (newDate) invalidateAvailabilityCache(finalLocationCode, newDate);
+    if (curDate) invalidateAvailabilityCache(finalLocationCode, curDate);
   }
 
   return jsonResponse({
@@ -1973,11 +2042,12 @@ function handleEditBooking(body, masterSS) {
     bookingId: bookingId,
     message: "Celebration booking details updated successfully!",
     updated: {
+      location: finalLocationName,
+      locationCode: finalLocationCode,
       date: newDate || curDate,
       timeSlot: rawNewSlot || curSlotNorm,
       guests: body.guests,
       occasion: body.occasion
-    }
   });
 }
 

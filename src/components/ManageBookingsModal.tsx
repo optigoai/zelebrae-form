@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { ManageableBooking } from '../types/booking';
 import { bookingApi } from '../services/bookingApi';
-import { STANDARD_TIME_SLOTS } from '../config/constants';
+import { STANDARD_TIME_SLOTS, DEFAULT_LOCATIONS } from '../config/constants';
 import {
   formatCelebrationDate,
   formatTimeSlotRange,
@@ -64,6 +64,7 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
 
   // Editing state
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editLocation, setEditLocation] = useState<string>('pantheerankavu');
   const [editDate, setEditDate] = useState<string>('');
   const [editSlot, setEditSlot] = useState<string>('');
   const [editGuests, setEditGuests] = useState<number>(4);
@@ -210,9 +211,18 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
     }
   };
 
+  const normalizeLocationId = (locStr?: string): string => {
+    if (!locStr) return 'pantheerankavu';
+    const s = locStr.toLowerCase().trim();
+    const found = DEFAULT_LOCATIONS.find(l => l.id === s || l.name.toLowerCase() === s || s.includes(l.id));
+    return found ? found.id : 'pantheerankavu';
+  };
+
   const handleStartEdit = (b: ManageableBooking) => {
     setCancellingId(null);
     setEditingId(b.bookingId);
+    const initialLoc = normalizeLocationId(b.location);
+    setEditLocation(initialLoc);
     setEditDate(b.date);
     setEditSlot(b.timeSlot);
     setEditGuests(b.guests || 4);
@@ -224,7 +234,7 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
     setUpdatedBookingInfo(null);
 
     // Synchronously check cache before async fetch
-    const cached = bookingApi.getCachedSlots(b.location, b.date);
+    const cached = bookingApi.getCachedSlots(initialLoc, b.date);
     if (cached) {
       setEditSlots(Array.from(new Set([b.timeSlot, ...cached].filter(Boolean))));
       setIsLoadingEditSlots(false);
@@ -232,14 +242,39 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
       setIsLoadingEditSlots(true);
     }
 
-    fetchSlotsForEdit(b.location, b.date, b.timeSlot);
+    fetchSlotsForEdit(initialLoc, b.date, b.timeSlot);
   };
 
-  const handleEditDateChange = (newDate: string, location: string, currentSlot: string) => {
+  const handleEditLocationChange = (newLoc: string) => {
+    setEditLocation(newLoc);
+    // If switching to Arakkinar, max guests is 6
+    if (newLoc.toLowerCase().includes('arakkinar') && editGuests > 6) {
+      setEditGuests(6);
+    }
+
+    const targetDate = editDate || todayStr;
+    const cached = bookingApi.getCachedSlots(newLoc, targetDate);
+    if (cached) {
+      const hasCurrent = cached.some(s => s.toLowerCase() === editSlot.toLowerCase());
+      if (hasCurrent) {
+        setEditSlots(Array.from(new Set([editSlot, ...cached].filter(Boolean))));
+      } else {
+        setEditSlots(cached);
+      }
+      setIsLoadingEditSlots(false);
+    } else {
+      setIsLoadingEditSlots(true);
+    }
+
+    fetchSlotsForEdit(newLoc, targetDate, editSlot);
+  };
+
+  const handleEditDateChange = (newDate: string, currentSlot: string) => {
     setEditDate(newDate);
+    const loc = editLocation || 'pantheerankavu';
 
     // Instant cache inspection
-    const cached = bookingApi.getCachedSlots(location, newDate);
+    const cached = bookingApi.getCachedSlots(loc, newDate);
     if (cached) {
       setEditSlots(Array.from(new Set([currentSlot, ...cached].filter(Boolean))));
       setIsLoadingEditSlots(false);
@@ -247,7 +282,7 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
       setIsLoadingEditSlots(true);
     }
 
-    fetchSlotsForEdit(location, newDate, currentSlot);
+    fetchSlotsForEdit(loc, newDate, currentSlot);
   };
 
   const handleSaveEdit = async (b: ManageableBooking) => {
@@ -265,6 +300,7 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
       const res = await bookingApi.editBooking({
         bookingId: b.bookingId,
         phone: fullPhone,
+        location: editLocation,
         date: editDate,
         timeSlot: editSlot,
         guests: editGuests,
@@ -274,6 +310,7 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
 
       const updatedObj: ManageableBooking = {
         ...b,
+        location: editLocation,
         date: editDate,
         timeSlot: editSlot,
         guests: editGuests,
@@ -608,6 +645,38 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
                             </div>
                           )}
 
+                          {/* Celebration Location Selector */}
+                          <div style={{ marginBottom: '0.85rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <MapPin size={13} color="#592F7C" />
+                                Celebration Location
+                              </label>
+                              {editLocation === 'arakkinar' && (
+                                <span className="badge badge-purple" style={{ fontSize: '0.65rem', padding: '0.12rem 0.4rem' }}>
+                                  Arakkinar Max 6 Guests
+                                </span>
+                              )}
+                            </div>
+                            <div className="manage-location-chips" role="radiogroup" aria-label="Select Celebration Location">
+                              {DEFAULT_LOCATIONS.map(loc => {
+                                const isSelected = editLocation === loc.id;
+                                return (
+                                  <button
+                                    key={loc.id}
+                                    type="button"
+                                    className={`manage-loc-chip ${isSelected ? 'active' : ''}`}
+                                    onClick={() => handleEditLocationChange(loc.id)}
+                                  >
+                                    <span className="loc-dot" />
+                                    <span className="loc-name">{loc.name}</span>
+                                    {loc.maxCapacity === 6 && <span className="loc-cap-tag">Max 6</span>}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
                           {/* Quick 1-Tap Date Navigation */}
                           <div style={{ marginBottom: '0.85rem' }}>
                             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: '0.35rem' }}>
@@ -630,7 +699,7 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
                                     key={opt.date}
                                     type="button"
                                     className={`manage-quick-date-chip ${isSelected ? 'active' : ''}`}
-                                    onClick={() => handleEditDateChange(opt.date, b.location, b.timeSlot)}
+                                    onClick={() => handleEditDateChange(opt.date, b.timeSlot)}
                                   >
                                     <span className="chip-label">{opt.label}</span>
                                     <span className="chip-date">{opt.display}</span>
@@ -648,12 +717,12 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
                                 min={todayStr}
                                 max={maxDateStr}
                                 value={editDate}
-                                onChange={(e) => handleEditDateChange(e.target.value, b.location, b.timeSlot)}
+                                onChange={(e) => handleEditDateChange(e.target.value, b.timeSlot)}
                               />
                             </div>
 
                             {(() => {
-                              const locMaxGuests = (b.location && b.location.toLowerCase().includes('arakkinar')) ? 6 : 15;
+                              const locMaxGuests = editLocation === 'arakkinar' ? 6 : 15;
                               return (
                                 <div className="manage-edit-field">
                                   <label>Number of Guests (1-{locMaxGuests})</label>
