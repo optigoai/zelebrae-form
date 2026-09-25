@@ -2048,6 +2048,7 @@ function handleEditBooking(body, masterSS) {
       timeSlot: rawNewSlot || curSlotNorm,
       guests: body.guests,
       occasion: body.occasion
+    }
   });
 }
 
