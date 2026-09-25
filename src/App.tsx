@@ -74,9 +74,21 @@ export const App: React.FC = () => {
     });
   }, []);
 
+  // Helper to determine max guests allowed for the selected celebration location (Arakkinar is max 6, others 15)
+  const getLocationMaxGuests = (locationId?: string): number => {
+    const loc = config.locations.find(l => l.id === locationId);
+    if (loc?.maxCapacity) return loc.maxCapacity;
+    return locationId === 'arakkinar' ? 6 : 15;
+  };
+
   // Handlers for state updates
   const handleSelectLocation = (locId: string) => {
-    setBookingState(prev => ({ ...prev, location: locId }));
+    const maxForLoc = getLocationMaxGuests(locId);
+    setBookingState(prev => ({
+      ...prev,
+      location: locId,
+      guests: prev.guests > maxForLoc ? maxForLoc : prev.guests
+    }));
   };
 
   const handleSelectOccasion = (occId: string) => {
@@ -185,7 +197,8 @@ export const App: React.FC = () => {
       if (bookingState.occasion === 'other' && !bookingState.customOccasion?.trim()) {
         return false;
       }
-      return bookingState.guests >= config.minGuests && bookingState.guests <= config.maxGuests;
+      const maxAllowed = getLocationMaxGuests(bookingState.location);
+      return bookingState.guests >= config.minGuests && bookingState.guests <= maxAllowed;
     }
     if (step === 3) {
       return Boolean(bookingState.date && bookingState.timeSlot);
@@ -424,7 +437,7 @@ export const App: React.FC = () => {
                 onChangeCustomOccasion={handleChangeCustomOccasion}
                 guests={bookingState.guests}
                 minGuests={config.minGuests}
-                maxGuests={config.maxGuests}
+                maxGuests={getLocationMaxGuests(bookingState.location)}
                 onChangeGuests={handleChangeGuests}
               />
             )}

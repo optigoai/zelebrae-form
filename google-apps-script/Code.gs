@@ -377,6 +377,16 @@ function doPost(e) {
       });
     }
 
+    // 3a. Guest count capacity check (Arakkinar max 6, other branches max 15)
+    const maxAllowedGuests = rawLocation.toLowerCase().indexOf('arakkinar') !== -1 ? 6 : 15;
+    if (guests > maxAllowedGuests) {
+      return jsonResponse({
+        success: false,
+        error: "EXCEEDS_CAPACITY",
+        message: "Maximum capacity for " + targetLocationName + " is " + maxAllowedGuests + " guests."
+      });
+    }
+
     // 3b. Check if date or slot has already passed
     const now = new Date();
     const todayStr = Utilities.formatDate(now, TIMEZONE, "yyyy-MM-dd");
@@ -1487,7 +1497,7 @@ function setupInitialSheets() {
     "Arakkinar", 
     "Modern celebration party lounge & outlet", 
     "Arakkinar, Beypore Road, Kozhikode, Kerala 673028", 
-    15, 
+    6, 
     true
   ]);
   locSheet.getRange(1, 1, 1, 6).setFontWeight("bold").setBackground("#592F7C").setFontColor("#FFFFFF");

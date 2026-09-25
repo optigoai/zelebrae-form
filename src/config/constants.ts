@@ -47,7 +47,7 @@ export const DEFAULT_LOCATIONS: CelebrationLocation[] = [
     tagline: '',
     address: 'Arakkinar, Beypore Road, Kozhikode, Kerala 673028',
     image: '/hero.webp',
-    maxCapacity: 15,
+    maxCapacity: 6,
     active: true,
     features: [],
     qrImage: '/images/qr-arakkinar.png',

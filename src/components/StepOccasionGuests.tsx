@@ -26,7 +26,7 @@ export const StepOccasionGuests: React.FC<StepOccasionGuestsProps> = ({
   maxGuests,
   onChangeGuests
 }) => {
-  const presetGuests = [2, 4, 6, 10, 15];
+  const presetGuests = [2, 4, 6, 10, 15].filter((p) => p <= maxGuests);
 
   const handleDecrement = () => {
     if (guests > minGuests) {

@@ -652,16 +652,21 @@ export const ManageBookingsModal: React.FC<ManageBookingsModalProps> = ({
                               />
                             </div>
 
-                            <div className="manage-edit-field">
-                              <label>Number of Guests (1-15)</label>
-                              <input
-                                type="number"
-                                min={1}
-                                max={15}
-                                value={editGuests}
-                                onChange={(e) => setEditGuests(Math.max(1, Math.min(15, parseInt(e.target.value) || 1)))}
-                              />
-                            </div>
+                            {(() => {
+                              const locMaxGuests = (b.location && b.location.toLowerCase().includes('arakkinar')) ? 6 : 15;
+                              return (
+                                <div className="manage-edit-field">
+                                  <label>Number of Guests (1-{locMaxGuests})</label>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={locMaxGuests}
+                                    value={editGuests}
+                                    onChange={(e) => setEditGuests(Math.max(1, Math.min(locMaxGuests, parseInt(e.target.value) || 1)))}
+                                  />
+                                </div>
+                              );
+                            })()}
 
                             <div className="manage-edit-field" style={{ gridColumn: '1 / -1' }}>
                               <label>Occasion</label>
