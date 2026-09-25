@@ -48,3 +48,5 @@ Thumbs.db
 # Raw documents & PDFs (keep local, do not push to GitHub)
 Docs/
 docs/
+details/
+details
