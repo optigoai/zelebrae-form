@@ -996,11 +996,31 @@ function sortBookingSheet(sheet, isBranchSheet) {
       addedCol = true;
     }
 
-    // 3. Read Celebration Date (Col 4 / D) and Time Slot (Col 5 / E)
+    // 3. Auto-repair any '#ERROR!' or unquoted '+91' formula parse errors in Column H (WhatsApp)
+    if (lastCol >= 8) {
+      try {
+        var phoneRange = sheet.getRange(2, 8, numDataRows, 1);
+        var formulas = phoneRange.getFormulas();
+        var vals = phoneRange.getValues();
+        for (var p = 0; p < numDataRows; p++) {
+          var f = (formulas[p][0] || '').toString();
+          var v = (vals[p][0] || '').toString();
+          if (f && f.indexOf('+') !== -1) {
+            phoneRange.getCell(p + 1, 1).setValue("'" + f.replace(/^=/, '').trim());
+          } else if (v === '#ERROR!' || v.toLowerCase().indexOf('error') !== -1) {
+            if (f) {
+              phoneRange.getCell(p + 1, 1).setValue("'" + f.replace(/^=/, '').trim());
+            }
+          }
+        }
+      } catch (errP) {}
+    }
+
+    // 4. Read Celebration Date (Col 4 / D) and Time Slot (Col 5 / E)
     var dateValues = sheet.getRange(2, 4, numDataRows, 1).getValues();
     var slotValues = sheet.getRange(2, 5, numDataRows, 1).getValues();
 
-    // 4. Construct chronological sort keys: YYYY-MM-DD_HHMM
+    // 5. Construct chronological sort keys: YYYY-MM-DD_HHMM
     var sortKeys = [];
     for (var i = 0; i < numDataRows; i++) {
       var d = dateValues[i][0];
@@ -1977,7 +1997,22 @@ function handleEditBooking(body, masterSS) {
         const updatedRow = rowValuesToMove || currentSheet.getRange(currentRowIndex, 1, 1, BOOKING_HEADERS.length).getValues()[0];
         updatedRow[2] = finalLocationName; // Column C: Location
         if (newDate) updatedRow[3] = newDate; // Column D: Date
-        if (rawNewSlot) updatedRow[4] = "'" + rawNewSlot; // Column E: Time Slot
+        // Column E: Time Slot - ensure single quote prefix
+        if (rawNewSlot) {
+          updatedRow[4] = "'" + rawNewSlot;
+        } else if (updatedRow[4]) {
+          updatedRow[4] = "'" + updatedRow[4].toString().replace(/^'/, '');
+        }
+
+        // Column H: WhatsApp - prevent Google Sheets from interpreting "+91..." as formula
+        let wNum = (updatedRow[7] || '').toString().trim().replace(/^'/, '');
+        if (!wNum || wNum === '#ERROR!' || wNum.toLowerCase().indexOf('error') !== -1) {
+          wNum = rawPhone.length >= 10 ? ('+91 ' + rawPhone.slice(-10)) : (body.phone || body.whatsapp || '');
+        }
+        if (wNum) {
+          updatedRow[7] = "'" + (wNum.startsWith('+') ? wNum : ('+91 ' + wNum.replace(/\D/g, '').slice(-10)));
+        }
+
         if (body.occasion) updatedRow[9] = body.occasion.toString().trim(); // Column J: Occasion
         if (body.guests !== undefined) {
           const g = parseInt(body.guests, 10);
@@ -2003,6 +2038,11 @@ function handleEditBooking(body, masterSS) {
             const bRow = i + 1;
             if (newDate) branchSheet.getRange(bRow, 4).setValue(newDate);
             if (rawNewSlot) branchSheet.getRange(bRow, 5).setValue("'" + rawNewSlot);
+            const curBranchH = (bData[i][7] || '').toString().trim();
+            if (curBranchH === '#ERROR!' || curBranchH.toLowerCase().indexOf('error') !== -1) {
+              const safePhone = rawPhone.length >= 10 ? ('+91 ' + rawPhone.slice(-10)) : (body.phone || body.whatsapp || '');
+              if (safePhone) branchSheet.getRange(bRow, 8).setValue("'" + safePhone);
+            }
             if (body.guests !== undefined) {
               const g = parseInt(body.guests, 10);
               if (!isNaN(g) && g >= 1) branchSheet.getRange(bRow, 11).setValue(Math.min(g, locMaxCapacity));
@@ -2017,6 +2057,15 @@ function handleEditBooking(body, masterSS) {
           }
         }
       }
+    }
+  }
+
+  // Also auto-fix Column H in Master Sheet if it currently contains #ERROR!
+  if (currentSheet) {
+    const curMasterH = (currentSheet.getRange(currentRowIndex, 8).getValue() || '').toString().trim();
+    if (curMasterH === '#ERROR!' || curMasterH.toLowerCase().indexOf('error') !== -1) {
+      const safePhone = rawPhone.length >= 10 ? ('+91 ' + rawPhone.slice(-10)) : (body.phone || body.whatsapp || '');
+      if (safePhone) currentSheet.getRange(currentRowIndex, 8).setValue("'" + safePhone);
     }
   }
 

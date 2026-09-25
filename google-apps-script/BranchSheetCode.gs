@@ -148,11 +148,31 @@ function sortAndFilterBranchSheet(sheet) {
       addedCol = true;
     }
 
-    // 3. Read Celebration Date (Col 4 / D) and Time Slot (Col 5 / E)
+    // 3. Auto-repair any '#ERROR!' or unquoted '+91' formula parse errors in Column H (WhatsApp)
+    if (lastCol >= 8) {
+      try {
+        var phoneRange = sheet.getRange(2, 8, numDataRows, 1);
+        var formulas = phoneRange.getFormulas();
+        var vals = phoneRange.getValues();
+        for (var p = 0; p < numDataRows; p++) {
+          var f = (formulas[p][0] || '').toString();
+          var v = (vals[p][0] || '').toString();
+          if (f && f.indexOf('+') !== -1) {
+            phoneRange.getCell(p + 1, 1).setValue("'" + f.replace(/^=/, '').trim());
+          } else if (v === '#ERROR!' || v.toLowerCase().indexOf('error') !== -1) {
+            if (f) {
+              phoneRange.getCell(p + 1, 1).setValue("'" + f.replace(/^=/, '').trim());
+            }
+          }
+        }
+      } catch (errP) {}
+    }
+
+    // 4. Read Celebration Date (Col 4 / D) and Time Slot (Col 5 / E)
     var dateValues = sheet.getRange(2, 4, numDataRows, 1).getValues();
     var slotValues = sheet.getRange(2, 5, numDataRows, 1).getValues();
 
-    // 4. Construct chronological sort keys: YYYY-MM-DD_HHMM
+    // 5. Construct chronological sort keys: YYYY-MM-DD_HHMM
     var sortKeys = [];
     for (var i = 0; i < numDataRows; i++) {
       var d = dateValues[i][0];
